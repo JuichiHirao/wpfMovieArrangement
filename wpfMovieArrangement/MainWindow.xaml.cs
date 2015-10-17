@@ -322,6 +322,11 @@ namespace wpfMovieArrangement
             settingControl = new SettingXmlControl();
             setting = settingControl.GetData();
 
+            if (setting.BasePath == null)
+            {
+                MessageBox.Show("SETTING.xmlが存在しないか、BasePathが設定されていません");
+                return;
+            }
             txtBasePath.Text = setting.BasePath;
             txtLabelPath.Text = setting.LabelPath;
             txtKoreanPornoPath.Text = setting.KoreanPornoPath;

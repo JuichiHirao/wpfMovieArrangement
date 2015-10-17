@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wpfMovieArrangement"
         mc:Ignorable="d"
-        Title="MainWindow" Height="798" Width="748">
+        Title="MainWindow" Height="800" Width="900" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged_1" Closed="Window_Closed_1">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalRar}"/>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalMovie}"/>
@@ -41,7 +41,7 @@
         <ControlTemplate x:Key="TextBoxErrorTemplate">
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <Image Height="16" Margin="0,0,5,0" Source="Assets/warning_48.png" ToolTip="{Binding ElementName=Holder, Path=AdornedElement.(Validation.Errors)[0].ErrorContent}"/>
+                    <Image Height="16" Margin="0,0,5,0" Source="assets/warning_48.png" ToolTip="{Binding ElementName=Holder, Path=AdornedElement.(Validation.Errors)[0].ErrorContent}"/>
                     <AdornedElementPlaceholder x:Name="Holder">
                     </AdornedElementPlaceholder>
                 </StackPanel>
