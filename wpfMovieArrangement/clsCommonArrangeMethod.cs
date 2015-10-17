@@ -119,6 +119,9 @@ namespace wpfMovieArrangement
                     listSelectedFiles.Add(files);
             }
 
+            if (listSelectedFiles.Count <= 0)
+                throw new Exception("対象のファイルが存在しません");
+
             SetExtension();
         }
 
@@ -291,7 +294,21 @@ namespace wpfMovieArrangement
                     }
                 }
                 else if (act.Kind == ActionInfo.EXEC_KIND_MOVE)
-                    File.Move(act.fileSource.FullName, act.fileDestination.FullName);
+                {
+                    if (File.Exists(act.fileDestination.FullName))
+                    {
+                        string msg = act.fileSource.Name + " " + act.fileSource.Length + " --> \n" + act.fileDestination.Name + " " + act.fileDestination.Length;
+                        MessageBoxResult result = MessageBox.Show("ファイルが存在します、上書きしても良いですか？\n" + msg, "上書き確認", MessageBoxButton.YesNo);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            File.Delete(act.fileDestination.FullName);
+                            File.Move(act.fileSource.FullName, act.fileDestination.FullName);
+                        }
+                    }
+                    else
+                        File.Move(act.fileSource.FullName, act.fileDestination.FullName);
+                }
             }
         }
 

@@ -28,6 +28,7 @@ namespace wpfMovieArrangement
         public readonly static RoutedCommand CahngeModeKoreanPorno = new RoutedCommand("CahngeModeKoreanPorno", typeof(MainWindow));
 
         private const string REGEX_MOVIE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm";
+        private const string REGEX_MOVIEONLY_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm";
 
         private List<MovieMaker> listMakers = null;
         ICollectionView ColViewListMakers;
@@ -765,7 +766,7 @@ namespace wpfMovieArrangement
                 // データベースへ登録用の情報を生成する
                 fileControl.SetDbMovieFilesInfo();
 
-                // 日付コピー等の実行
+                // 動画、画像ファイルの移動、日付コピー等の実行
                 fileControl.Execute();
 
                 // データベースへ登録
@@ -779,6 +780,11 @@ namespace wpfMovieArrangement
                 Debug.Write(exp);
                 MessageBox.Show(exp.Message);
                 return;
+            }
+            finally
+            {
+                foreach (TargetFiles file in dgridDestFile.ItemsSource)
+                    file.IsSelected = false;
             }
 
             // RARファイルの場合は一式を削除
@@ -923,7 +929,10 @@ namespace wpfMovieArrangement
 
             // OR検索の場合
             if (MatchCount >= 1)
+            {
+                mTarget.IsSelected = true;
                 return true;
+            }
 
             return false;
         }
@@ -931,14 +940,35 @@ namespace wpfMovieArrangement
         private void btnSearch_Click(object sender, RoutedEventArgs e)
         {
             dgridArrangementTarget.Items.Filter = new Predicate<object>(FilterContentsItemAndSearchFilter);
-            dgridDestFile.Items.Filter = new Predicate<object>(FilterContentsItemAndSearchFilter);
 
-            // 検索は以下の順番で行う
+            List<TargetFiles> files = (List<TargetFiles>)dgridArrangementTarget.ItemsSource;
+
+            Regex regex = new Regex(REGEX_MOVIEONLY_EXTENTION, RegexOptions.IgnoreCase);
+            Regex regexEdited = new Regex("^\\[AV|^\\[裏AV|^\\[IV");
+
+            dgridArrangementTarget.SelectedItem = null;
+            TargetFiles selFile = null;
+            foreach(TargetFiles file in files)
+            {
+                if (file.IsSelected)
+                {
+                    if (regex.IsMatch(file.Name))
+                    {
+                        selFile = file;
+                        break;
+                    }
+                }
+            }
+            if (selFile != null)
+                dgridArrangementTarget.SelectedItem = selFile;
+
+            dgridDestFile.Items.Filter = new Predicate<object>(FilterContentsItemAndSearchFilter);
+            btnExecuteNameChange.Focus();
+
+            // MovieFileContentsからの二重登録防止のための検索は以下の順番で行う
             // １）品番で完全一致（ハイフンを削除して大文字変換での一致）
             // ２）１）で無い場合は品番で文字列を含むかどうかで検索
             // ３）２）で無い場合はファイル名全体で検索
-
-
             string bartext = "";
             string searchword = txtSearch.Text.Replace("-", "");
             // 品番で完全一致（ハイフンを削除して大文字変換での一致）

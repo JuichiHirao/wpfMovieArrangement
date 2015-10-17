@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wpfMovieArrangement"
         mc:Ignorable="d"
-        Title="MainWindow" Height="800" Width="900" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged_1" Closed="Window_Closed_1">
+        Title="MainWindow" Height="900" Width="800" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged_1" Closed="Window_Closed_1">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalRar}"/>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalMovie}"/>
@@ -162,7 +162,7 @@
                 <TextBox Name="txtChangeFileName" Width="Auto" Height="30" Margin="5,5,5,5" MouseDoubleClick="txtChangeFileName_MouseDoubleClick" />
             </Grid>
             <!--<Button Name="btnAllSelect" Content="全選択" Width="60" Margin="5,0,5,0" Click="btnAllSelect_Click" HorizontalAlignment="Right" Grid.Row="3"/>-->
-            <DataGrid Name="dgridDestFile" Width="Auto"  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Grid.Row="5" MouseDoubleClick="dgridDestFile_MouseDoubleClick">
+            <DataGrid Name="dgridDestFile" Width="Auto" FontSize="16" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Grid.Row="5" MouseDoubleClick="dgridDestFile_MouseDoubleClick">
                 <DataGrid.ContextMenu>
                     <ContextMenu>
                         <MenuItem Name="menuitemEdit" Header="ファイル名コピー(拡張子除く)" Click="menuitemNameCopy" />
@@ -173,7 +173,7 @@
                     <DataGridTemplateColumn Header="ファイル名">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Name="Name" Text="{Binding Path=Name}" Width="300" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12" />
+                                <TextBlock Name="Name" Text="{Binding Path=Name}" Width="300" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="18" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
