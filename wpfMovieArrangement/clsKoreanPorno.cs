@@ -113,6 +113,9 @@ namespace wpfMovieArrangement
 
         public static string GetFrozenPathname(string myPath, string myArchiveName)
         {
+            if (myArchiveName == null || myArchiveName.Length <= 0)
+                return null;
+
             string pathname = System.IO.Path.Combine(myPath, myArchiveName);
 
             FileInfo fileinfo = new FileInfo(pathname);

@@ -944,7 +944,6 @@ namespace wpfMovieArrangement
             List<TargetFiles> files = (List<TargetFiles>)dgridArrangementTarget.ItemsSource;
 
             Regex regex = new Regex(REGEX_MOVIEONLY_EXTENTION, RegexOptions.IgnoreCase);
-            Regex regexEdited = new Regex("^\\[AV|^\\[裏AV|^\\[IV");
 
             dgridArrangementTarget.SelectedItem = null;
             TargetFiles selFile = null;
@@ -1090,6 +1089,9 @@ namespace wpfMovieArrangement
 
         private void dgridSelectTargetFilename_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            foreach (TargetFiles file in dgridDestFile.ItemsSource)
+                file.IsSelected = false;
+
             Regex regex = new Regex(".* \\[.* ");
             txtbSourceFilename.Text = dgridSelectTargetFilename.SelectedItem.ToString();
             txtChangeFileName.Text = dgridSelectTargetFilename.SelectedItem.ToString();
@@ -1142,7 +1144,7 @@ namespace wpfMovieArrangement
             txtTitleText.Text = titletext;
 
             txtStatusBar.Text = "";
-            txtKind.Text = "";
+            if (chkKindFixed.IsChecked == null || !(bool)chkKindFixed.IsChecked) txtKind.Text = "";
             txtMatchStr.Text = "";
             txtMaker.Text = "";
             txtTitle.Text = "";
@@ -1312,7 +1314,8 @@ namespace wpfMovieArrangement
             {
                 txtMaker.Text = myMaker.GetNameLabel();
                 txtMatchStr.Text = myMaker.MatchStr;
-                txtKind.Text = myMaker.Kind.ToString();
+                if (chkKindFixed.IsChecked == null || !(bool)chkKindFixed.IsChecked)
+                    txtKind.Text = myMaker.Kind.ToString();
             }
 
             string edittext = myMovieFile.EditPasteText;
@@ -1468,6 +1471,10 @@ namespace wpfMovieArrangement
                 name += "[IVRIP]";
             else if (txtKind.Text.Equals("3"))
                 name += "[裏AVRIP]";
+            else if (txtKind.Text.Equals("4"))
+                name += "[DMMR-AVRIP]";
+            else if (txtKind.Text.Equals("5"))
+                name += "[DMMR-AVRIP]";
 
             name += "【" + txtMaker.Text + "】";
             name += txtTitle.Text + " ";
@@ -1575,6 +1582,7 @@ namespace wpfMovieArrangement
             }
 
             dgridKoreanPorno.Visibility = System.Windows.Visibility.Hidden;
+            btnKoreanPornoExecute.Focus();
         }
 
         private void dgridKoreanPorno_SelectionChanged(object sender, SelectionChangedEventArgs e)

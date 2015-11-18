@@ -303,6 +303,10 @@
                         <ColumnDefinition Width="150" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="種別" Margin="15,3,5,3" />
+                    <WrapPanel Orientation="Horizontal" Margin="5,3,5,3" HorizontalAlignment="Right">
+                        <TextBlock Text="Fixed" Margin="5,3,5,3" VerticalAlignment="Bottom" />
+                        <CheckBox Name="chkKindFixed" Margin="5,3,5,3" VerticalAlignment="Bottom" />
+                    </WrapPanel>
                     <TextBox Name="txtKind" Margin="5,3,5,3" Grid.Row="1" TextWrapping="Wrap" />
                     <TextBlock Text="品番" Margin="15,3,5,3" Grid.Column="1" />
                     <TextBox Name="txtProductNumber" Margin="5,3,5,3" Grid.Column="1" Grid.Row="1" />
