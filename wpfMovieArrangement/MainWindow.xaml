@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wpfMovieArrangement"
         mc:Ignorable="d"
-        Title="MainWindow" Height="900" Width="800" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged_1" Closed="Window_Closed_1">
+        Title="MainWindow" Height="1000" Width="800" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged_1" Closed="Window_Closed_1">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalRar}"/>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalMovie}"/>
@@ -321,8 +321,13 @@
                 <TextBox Name="txtMaker" Margin="5,3,5,3" Grid.Row="2" TextWrapping="Wrap" MouseDoubleClick="txtMaker_MouseDoubleClick" />
                 <TextBlock Text="タイトル" Margin="5,3,5,3" Grid.Row="3" />
                 <TextBox Name="txtTitle" Margin="5,3,5,3" Grid.Row="4" TextWrapping="Wrap" LostFocus="GenerateFilename" />
-                <TextBlock Text="出演" Margin="5,3,5,3" Grid.Row="5" />
-                <Button Name="btnPasteActresses" Content="貼り付け" Width="80" Margin="125,5,5,3" HorizontalAlignment="Left" Grid.Row="5" Click="btnPasteActresses_Click" />
+                <WrapPanel Orientation="Horizontal" Margin="5,3,5,3" VerticalAlignment="Bottom" Grid.Row="5">
+                    <TextBlock Text="出演" Margin="5,0,5,0"  />
+                    <Button Name="btnPasteActresses" Content="貼り付け" Width="80" Margin="5,0,5,0" HorizontalAlignment="Left" Grid.Row="5" Click="btnPasteActresses_Click" />
+                    <TextBlock Text="Fixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
+                    <CheckBox Name="chkActressFixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
+                    <Button Name="btnClearActress" Content="クリア" Click="btnClearActress_Click" />
+                </WrapPanel>
                 <TextBox Name="txtActresses" Margin="5,3,5,3" Grid.Row="6" TextWrapping="Wrap" />
                 <TextBox Name="txtFilenameGenerate" Margin="5,3,5,3" FontSize="24" Grid.Row="7" TextWrapping="Wrap" />
                 <Button Content="生成ファイル名コピー" Name="btnGenerateFilenameCopy" Width="150" Height="30" HorizontalAlignment="Right" Grid.Row="8" Click="btnGenerateFilenameCopy_Click" />

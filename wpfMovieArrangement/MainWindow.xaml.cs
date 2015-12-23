@@ -1301,7 +1301,17 @@ namespace wpfMovieArrangement
 
             if (myMovieFile.SellDate.Year >= 1900)
                 txtFilenameGenDate.Text = myMovieFile.SellDate.ToString("yyyy/MM/dd");
-            txtActresses.Text = myMovieFile.Remark;
+
+            if (myMovieFile.Remark != null && myMovieFile.Remark.Length > 0)
+            {
+                if (chkActressFixed.IsChecked != null)
+                {
+                    bool b = (bool)chkActressFixed.IsChecked;
+
+                    if (!b)
+                        txtActresses.Text = myMovieFile.Remark;
+                }
+            }
 
             if (myMaker == null)
             {
@@ -1668,6 +1678,11 @@ namespace wpfMovieArrangement
                     return true;
                 return false;
             };
+        }
+
+        private void btnClearActress_Click(object sender, RoutedEventArgs e)
+        {
+            txtActresses.Text = "";
         }
     }
 }
