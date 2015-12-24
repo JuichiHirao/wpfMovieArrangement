@@ -288,7 +288,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="40" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="120" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="80" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -329,8 +329,17 @@
                     <Button Name="btnClearActress" Content="クリア" Click="btnClearActress_Click" />
                 </WrapPanel>
                 <TextBox Name="txtActresses" Margin="5,3,5,3" Grid.Row="6" TextWrapping="Wrap" />
-                <TextBox Name="txtFilenameGenerate" Margin="5,3,5,3" FontSize="24" Grid.Row="7" TextWrapping="Wrap" />
-                <Button Content="生成ファイル名コピー" Name="btnGenerateFilenameCopy" Width="150" Height="30" HorizontalAlignment="Right" Grid.Row="8" Click="btnGenerateFilenameCopy_Click" />
+                <TextBox Name="txtFilenameGenerate" Margin="5,3,5,3" HorizontalAlignment="Left" FontSize="24" Grid.Row="7" TextWrapping="Wrap" />
+                <Grid Grid.Row="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Button Content="生成ファイル名コピー" Name="btnGenerateFilenameCopy" Width="150" Margin="5,5,5,5" HorizontalAlignment="Right" Click="btnGenerateFilenameCopy_Click" />
+                    <TextBox Name="txtFileGeneSearchText" Width="400" Margin="5,5,5,5" HorizontalAlignment="Left" Grid.Row="1" />
+                    <Button Content="検索" Name="btnFileGenSearch" Width="80" Margin="410,5,5,5" HorizontalAlignment="Left" Grid.Row="1" Click="btnFileGenSearch_Click" />
+                    <Button Content="削除" Name="btnFileGenDeleteSelectFile" Width="80" Margin="5,5,5,5" HorizontalAlignment="Right" Grid.Row="1" Click="btnFileGenDeleteSelectFile_Click" />
+                </Grid>
                 <DataGrid Name="dgridCheckExistFiles" Width="Auto"  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Grid.Row="9" MouseDoubleClick="dgridDestFile_MouseDoubleClick">
                     <DataGrid.Columns>
                         <DataGridCheckBoxColumn Header="選択" Binding="{Binding Path=IsSelected}" CellStyle="{StaticResource SingleClickEditing}" />

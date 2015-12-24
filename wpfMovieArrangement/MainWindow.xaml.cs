@@ -1089,12 +1089,21 @@ namespace wpfMovieArrangement
 
         private void dgridSelectTargetFilename_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            Regex regex = new Regex("^RAR");
+
+            string selectText = dgridSelectTargetFilename.SelectedItem.ToString();
+            if (regex.IsMatch(dgridSelectTargetFilename.SelectedItem.ToString()))
+            {
+                ChangeModeNormalRarExecute(null, null);
+                selectText = regex.Replace(selectText, "^RAR.[ ]");
+            }
+
             foreach (TargetFiles file in dgridDestFile.ItemsSource)
                 file.IsSelected = false;
 
-            Regex regex = new Regex(".* \\[.* ");
+            regex = new Regex(".* \\[.* ");
             txtbSourceFilename.Text = dgridSelectTargetFilename.SelectedItem.ToString();
-            txtChangeFileName.Text = dgridSelectTargetFilename.SelectedItem.ToString();
+            txtChangeFileName.Text = selectText;
 
             string WorkStr = "";
             if (regex.IsMatch(txtChangeFileName.Text))
@@ -1140,7 +1149,6 @@ namespace wpfMovieArrangement
         private void btnPasteTitleText_Click(object sender, RoutedEventArgs e)
         {
             string titletext = ClipBoardCommon.GetText();
-
             txtTitleText.Text = titletext;
 
             txtStatusBar.Text = "";
@@ -1188,7 +1196,9 @@ namespace wpfMovieArrangement
 
                 return;
             }
+
             ExecuteMatchFiles();
+            txtFileGeneSearchText.Text = txtSearch.Text;
         }
 
         private void ExecuteMatchFiles()
@@ -1683,6 +1693,36 @@ namespace wpfMovieArrangement
         private void btnClearActress_Click(object sender, RoutedEventArgs e)
         {
             txtActresses.Text = "";
+        }
+
+        private void btnFileGenDeleteSelectFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (dgridCheckExistFiles.SelectedItems == null || dgridCheckExistFiles.SelectedItems.Count <= 0)
+                return;
+
+            MessageBoxResult result = MessageBox.Show("削除しますか？", "削除確認", MessageBoxButton.OKCancel);
+
+            if (result == MessageBoxResult.Cancel)
+                return;
+
+            foreach(TargetFiles file in dgridCheckExistFiles.SelectedItems)
+            {
+                FileSystem.DeleteFile(
+                    file.FileInfo.FullName,
+                    UIOption.OnlyErrorDialogs,
+                    RecycleOption.SendToRecycleBin);
+            }
+
+            ExecuteMatchFiles();
+
+            btnFileGenSearch_Click(null, null);
+        }
+
+        private void btnFileGenSearch_Click(object sender, RoutedEventArgs e)
+        {
+            txtSearch.Text = txtFileGeneSearchText.Text;
+
+            dgridCheckExistFiles.Items.Filter = new Predicate<object>(FilterTargetFilesSearchFilter);
         }
     }
 }
