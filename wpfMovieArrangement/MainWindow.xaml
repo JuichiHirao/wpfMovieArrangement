@@ -321,13 +321,16 @@
                 <TextBox Name="txtMaker" Margin="5,3,5,3" Grid.Row="2" TextWrapping="Wrap" MouseDoubleClick="txtMaker_MouseDoubleClick" />
                 <TextBlock Text="タイトル" Margin="5,3,5,3" Grid.Row="3" />
                 <TextBox Name="txtTitle" Margin="5,3,5,3" Grid.Row="4" TextWrapping="Wrap" LostFocus="GenerateFilename" />
-                <WrapPanel Orientation="Horizontal" Margin="5,3,5,3" VerticalAlignment="Bottom" Grid.Row="5">
-                    <TextBlock Text="出演" Margin="5,0,5,0"  />
-                    <Button Name="btnPasteActresses" Content="貼り付け" Width="80" Margin="5,0,5,0" HorizontalAlignment="Left" Grid.Row="5" Click="btnPasteActresses_Click" />
-                    <TextBlock Text="Fixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
-                    <CheckBox Name="chkActressFixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
-                    <Button Name="btnClearActress" Content="クリア" Click="btnClearActress_Click" />
-                </WrapPanel>
+                <Grid Margin="5,3,5,3" VerticalAlignment="Bottom" Grid.Row="5">
+                    <WrapPanel Orientation="Horizontal">
+                        <TextBlock Text="出演" Margin="5,0,5,0"  />
+                        <Button Name="btnPasteActresses" Content="貼り付け" Width="80" Margin="5,0,5,0" HorizontalAlignment="Left" Click="btnPasteActresses_Click" />
+                        <TextBlock Text="Fixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
+                        <CheckBox Name="chkActressFixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
+                        <Button Name="btnClearActress" Content="クリア" Click="btnClearActress_Click" />
+                    </WrapPanel>
+                    <Button Name="btnFileGeneTextAddRar" Content="RAR" Width="60" HorizontalAlignment="Right" Click="btnFileGeneTextAddRar_Click" />
+                </Grid>
                 <TextBox Name="txtActresses" Margin="5,3,5,3" Grid.Row="6" TextWrapping="Wrap" />
                 <TextBox Name="txtFilenameGenerate" Margin="5,3,5,3" HorizontalAlignment="Left" FontSize="24" Grid.Row="7" TextWrapping="Wrap" />
                 <Grid Grid.Row="8">

@@ -28,6 +28,7 @@ namespace wpfMovieArrangement
         public readonly static RoutedCommand CahngeModeKoreanPorno = new RoutedCommand("CahngeModeKoreanPorno", typeof(MainWindow));
 
         private const string REGEX_MOVIE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm";
+        private const string REGEX_TARGETFILE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.rar";
         private const string REGEX_MOVIEONLY_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm";
 
         private List<MovieMaker> listMakers = null;
@@ -342,7 +343,7 @@ namespace wpfMovieArrangement
 
             OnGridTargetDisplay(null, null);
 
-            dgridDestFile.ItemsSource = GetDestFiles(txtBasePath.Text);
+            dgridDestFile.ItemsSource = GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
 
             //txtStatusBar.IsReadOnly = true;
             txtStatusBar.Width = statusbarMain.ActualWidth;
@@ -418,9 +419,9 @@ namespace wpfMovieArrangement
 
             //            listTextFileName.Add();
         }
-        public List<TargetFiles> GetDestFiles(string myPath)
+        public List<TargetFiles> GetDestFiles(string myPath, string myTargetExtention)
         {
-            Regex regex = new Regex(REGEX_MOVIE_EXTENTION, RegexOptions.IgnoreCase);
+            Regex regex = new Regex(myTargetExtention, RegexOptions.IgnoreCase);
             Regex regexEdited = new Regex("^\\[AV|^\\[裏AV|^\\[IV");
             //IEnumerable<string> files = from file in Directory.GetFiles(@"\\SANDY2500\BitTorrent\JDownloader", "*", SearchOption.AllDirectories) where regex.IsMatch(file) select file;
 
@@ -883,7 +884,7 @@ namespace wpfMovieArrangement
                 if (!CanGetDirectoryInfo())
                     return;
 
-                dgridArrangementTarget.ItemsSource = GetDestFiles(txtBasePath.Text);
+                dgridArrangementTarget.ItemsSource = GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
             }
         }
 
@@ -901,7 +902,7 @@ namespace wpfMovieArrangement
             if (!CanGetDirectoryInfo())
                 return;
 
-            dgridDestFile.ItemsSource = GetDestFiles(txtBasePath.Text);
+            dgridDestFile.ItemsSource = GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
         }
 
         private bool FilterContentsItemAndSearchFilter(object item)
@@ -1089,13 +1090,13 @@ namespace wpfMovieArrangement
 
         private void dgridSelectTargetFilename_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            Regex regex = new Regex("^RAR");
+            Regex regex = new Regex("^RAR", RegexOptions.IgnoreCase);
 
             string selectText = dgridSelectTargetFilename.SelectedItem.ToString();
             if (regex.IsMatch(dgridSelectTargetFilename.SelectedItem.ToString()))
             {
                 ChangeModeNormalRarExecute(null, null);
-                selectText = regex.Replace(selectText, "^RAR.[ ]");
+                selectText = Regex.Replace(selectText, "^RAR[ ]*",  "");
             }
 
             foreach (TargetFiles file in dgridDestFile.ItemsSource)
@@ -1120,7 +1121,7 @@ namespace wpfMovieArrangement
                 btnSearch_Click(null, null);
             }
 
-            gridSelectTargetFilename.Visibility = System.Windows.Visibility.Hidden;
+            gridSelectTargetFilename.Visibility = Visibility.Hidden;
         }
 
         private void btnBasePathPaste_Click(object sender, RoutedEventArgs e)
@@ -1203,7 +1204,7 @@ namespace wpfMovieArrangement
 
         private void ExecuteMatchFiles()
         {
-            List<TargetFiles> files = GetDestFiles(txtBasePath.Text);
+            List<TargetFiles> files = GetDestFiles(txtBasePath.Text, REGEX_TARGETFILE_EXTENTION);
             dgridCheckExistFiles.ItemsSource = files;
 
             if (txtProductNumber.Text != null && txtProductNumber.Text.Length > 0)
@@ -1663,7 +1664,7 @@ namespace wpfMovieArrangement
             string search = txtMakersSearch.Text;
             try
             {
-                Regex regex = new Regex(search);
+                Regex regex = new Regex(search, RegexOptions.IgnoreCase);
             }
             catch (Exception ex)
             {
@@ -1723,6 +1724,20 @@ namespace wpfMovieArrangement
             txtSearch.Text = txtFileGeneSearchText.Text;
 
             dgridCheckExistFiles.Items.Filter = new Predicate<object>(FilterTargetFilesSearchFilter);
+        }
+
+        private void btnFileGeneTextAddRar_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            if (button == null)
+                return;
+
+            Regex regex = new Regex("^" + button.Content, RegexOptions.IgnoreCase);
+
+            if (regex.IsMatch(txtFilenameGenerate.Text))
+                return;
+
+            txtFilenameGenerate.Text = button.Content + " " + txtFilenameGenerate.Text;
         }
     }
 }
