@@ -154,7 +154,7 @@ namespace wpfMovieArrangement
 
         public void ParseSetProductNumber(string myText)
         {
-            Regex regex = new Regex("\\[{0,1}[A-Za-z]{1,}-[0-9]*\\]{0,1}[A-Za-z]{0,1}");
+            Regex regex = new Regex("\\[{0,1}[0-9A-Za-z]{1,}-[0-9]*\\]{0,1}[A-Za-z]{0,1}");
 
             // 品番っぽい文字列が存在する場合は暫定でAVRIPを設定
             if (regex.IsMatch(myText))

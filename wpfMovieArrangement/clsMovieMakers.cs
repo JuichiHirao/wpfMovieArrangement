@@ -44,14 +44,21 @@ namespace wpfMovieArrangement
                     Regex regex = new Regex(makerdata.MatchStr, RegexOptions.IgnoreCase);
                     if (regex.IsMatch(myText))
                     {
-                        Regex regexPN = new Regex(makerdata.MatchProductNumber);
-                        if (regexPN.IsMatch(myText))
+                        try
                         {
-                            makerdata.MatchProductNumberValue = regexPN.Match(myText).Value;
-                            if (listMatchMaker == null)
-                                listMatchMaker = new List<MovieMaker>();
+                            Regex regexPN = new Regex(makerdata.MatchProductNumber);
+                            if (regexPN.IsMatch(myText))
+                            {
+                                makerdata.MatchProductNumberValue = regexPN.Match(myText).Value;
+                                if (listMatchMaker == null)
+                                    listMatchMaker = new List<MovieMaker>();
 
-                            listMatchMaker.Add(makerdata);
+                                listMatchMaker.Add(makerdata);
+                            }
+                        }
+                        catch (ArgumentException)
+                        {
+                            throw new Exception("正規表現が不正です\n" + makerdata.Name + "\n" + makerdata.MatchProductNumber);
                         }
                     }
                 }

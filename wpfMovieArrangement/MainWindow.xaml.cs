@@ -1167,7 +1167,17 @@ namespace wpfMovieArrangement
             MovieFileContents moviefile = new MovieFileContents();
             moviefile.ParseFromJavSiteText(titletext);
 
-            List<MovieMaker> listMatchMaker = MovieMakers.GetMatchData(moviefile.EditPasteText, listMakers, moviefile);
+            List<MovieMaker> listMatchMaker;
+
+            try
+            {
+                listMatchMaker = MovieMakers.GetMatchData(moviefile.EditPasteText, listMakers, moviefile);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return;
+            }
 
             if (listMatchMaker == null || listMatchMaker.Count() <= 0)
             {
@@ -1313,16 +1323,15 @@ namespace wpfMovieArrangement
             if (myMovieFile.SellDate.Year >= 1900)
                 txtFilenameGenDate.Text = myMovieFile.SellDate.ToString("yyyy/MM/dd");
 
-            if (myMovieFile.Remark != null && myMovieFile.Remark.Length > 0)
+            if (chkActressFixed.IsChecked != null)
             {
-                if (chkActressFixed.IsChecked != null)
-                {
-                    bool b = (bool)chkActressFixed.IsChecked;
+                bool b = (bool)chkActressFixed.IsChecked;
 
-                    if (!b)
-                        txtActresses.Text = myMovieFile.Remark;
-                }
+                if (!b)
+                    txtActresses.Text = myMovieFile.Remark;
             }
+            else
+                txtActresses.Text = myMovieFile.Remark;
 
             if (myMaker == null)
             {
@@ -1518,9 +1527,10 @@ namespace wpfMovieArrangement
             {
                 Clipboard.SetData(DataFormats.Text, txtFilenameGenerate.Text);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MessageBox.Show("クリップボードの取得に失敗しました");
+                txtStatusBar.Text = "クリップボードの取得に失敗しました " + ex.Message;
+                //MessageBox.Show("クリップボードの取得に失敗しました");
             }
         }
 
@@ -1669,13 +1679,86 @@ namespace wpfMovieArrangement
             catch (Exception ex)
             {
                 Debug.Write(ex);
+                return;
             }
 
+            string[] arrSearchAnd, arrSearchOr = null;
+            bool IsSearchAnd = false, IsSearchOr = false;
+            arrSearchAnd = search.Split(' ');
+
+            if (arrSearchAnd.Length >= 2)
+            {
+                int cnt = 0;
+                foreach (string str in arrSearchAnd)
+                {
+                    if (str != null && str.Length > 0)
+                        cnt++;
+                }
+                if (cnt > 1)
+                    IsSearchAnd = true;
+            }
+            else
+            {
+                arrSearchOr = search.Split(',');
+
+                if (arrSearchOr.Length >= 2)
+                {
+                    int cnt = 0;
+                    foreach (string str in arrSearchOr)
+                    {
+                        if (str != null && str.Length > 0)
+                            cnt++;
+                    }
+                    if (cnt > 1)
+                        IsSearchOr = true;
+                }
+
+            }
+
+            int matchCnt = 0;
             ColViewListMakers.Filter = delegate (object o)
             {
                 MovieMaker data = o as MovieMaker;
 
-                //if (search.Length > 0)
+                if (search.Length > 0)
+                {
+                    if (IsSearchAnd)
+                    {
+                        matchCnt = 0;
+                        foreach (string str in arrSearchAnd)
+                        {
+                            if (data.Name.ToUpper().IndexOf(str) >= 0
+                                || data.Label.ToUpper().IndexOf(str) >= 0)
+                                matchCnt++;
+                        }
+
+                        if (arrSearchAnd.Length == matchCnt)
+                            return true;
+
+                        return false;
+                    }
+                    else if (IsSearchOr)
+                    {
+                        foreach (string str in arrSearchOr)
+                        {
+                            if (data.Name.ToUpper().IndexOf(str) >= 0
+                            || data.Label.ToUpper().IndexOf(str) >= 0)
+                                return true;
+                        }
+
+                        return false;
+                    }
+                    else
+                    {
+                        if (data.Name.ToUpper().IndexOf(search.ToUpper()) >= 0
+                            || data.Label.ToUpper().IndexOf(search.ToUpper()) >= 0)
+                            return true;
+
+                        return false;
+                    }
+
+                    return false;
+                }
 
                 int kind = data.Kind;
                 if (one && kind == 1)

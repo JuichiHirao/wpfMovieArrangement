@@ -379,8 +379,9 @@
                     <CheckBox Name="chkKindOne" Margin="0,3,0,0" Content="1" Click="OnMakersFilter" />
                     <CheckBox Name="chkKindTwo" Margin="0,3,0,0" Content="2" Click="OnMakersFilter" />
                     <CheckBox Name="chkKindThree" Margin="0,3,0,0" Content="3" Click="OnMakersFilter" />
-                    <TextBox Name="txtMakersSearch" Width="200" Margin="10,0,10,0" TextWrapping="Wrap" />
-                    <Button Style="{StaticResource CircleCloseButton}" Margin="-20,3,3,0" HorizontalAlignment="Right" Click="OnMakersFilter" />
+                    <TextBox Name="txtMakersSearch" Width="200" Margin="10,0,10,0" TextWrapping="Wrap" TextChanged="OnMakersFilter" />
+                    <TextBlock Text="Space AND Camma OR" Margin="5,0,5,0" Background="White" />
+                    <Button Style="{StaticResource CircleCloseButton}" Margin="-3,3,3,0" HorizontalAlignment="Right" Click="OnMakersFilter" />
                 </WrapPanel>
                 <Button Style="{StaticResource CircleCloseButton}" Margin="0,3,3,0" HorizontalAlignment="Right" Click="ButtonMakerClose" />
                 <DataGrid Name="dgridMakers" Width="Auto" Margin="10,3,10,10" AutoGenerateColumns="False" CanUserAddRows="False" Grid.Row="1" MouseDoubleClick="dgridMakers_MouseDoubleClick" PreviewKeyDown="dgridMakers_PreviewKeyDown" SelectionChanged="dgridMakers_SelectionChanged">
