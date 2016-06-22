@@ -86,6 +86,8 @@ namespace wpfMovieArrangement
     }
     class FileControl
     {
+        public static string AVRIP_HISTROY_PATHNAME = @"C:\Users\JuuichiHirao\Dropbox\Interest\TEXT\AVRIP_HISTORY.txt";
+
         public string BasePath = "";        // txtBasePath.Text
         public string DestFilename = "";    // txtChangeFileName.Text
         public string LabelPath = "";       // txtLabelPath.Text
@@ -156,7 +158,7 @@ namespace wpfMovieArrangement
         public void SetJpegActionInfo()
         {
             // 画像のファイル名の変更、元ファイルの更新日をコピー
-            Regex regexImage = new Regex(@".*jpg$|.*jpeg$");
+            Regex regexImage = new Regex(@".*jpg$|.*jpeg$|.*png$");
             string ExtensionJpg = ".jpg";
 
             foreach (TargetFiles files in listSelectedFiles)
@@ -167,7 +169,7 @@ namespace wpfMovieArrangement
                     string DestPathname = "";
 
                     // 「Big」が入っている場合は_thを付加する
-                    Regex regexImageTh = new Regex(@".*[Bb]ig\.jpg$|.*[Bb]ig\.jpeg$");
+                    Regex regexImageTh = new Regex(@".*[Bb]ig\.jpg$|.*[Bb]ig\.jpeg$|.*[Bb]ig\.png$");
                     if (regexImageTh.IsMatch(files.Name))
                         DestPathname = System.IO.Path.Combine(BasePath, DestFilename + "_th" + ExtensionJpg);
                     else
@@ -234,6 +236,7 @@ namespace wpfMovieArrangement
             {
                 if (ext.ToUpper().Equals(".JPG")
                     || ext.ToUpper().Equals(".JPEG")
+                    || ext.ToUpper().Equals(".PNG")
                     || ext.ToUpper().Equals(".ISO"))
                     continue;
 
@@ -357,7 +360,7 @@ namespace wpfMovieArrangement
         {
             System.IO.StreamReader strmReader = null;
             System.IO.StreamWriter strmWriter = null;
-            string FilePathname = @"Z:\TEXT\AVRIP 履歴.txt";
+            string FilePathname = FileControl.AVRIP_HISTROY_PATHNAME;
 
             // 行数の取得用のテキストファイルを読み込み
             strmReader = new System.IO.StreamReader(FilePathname, System.Text.Encoding.GetEncoding("UTF-16"));
@@ -393,7 +396,7 @@ namespace wpfMovieArrangement
         {
             System.IO.StreamReader strmReader = null;
             System.IO.StreamWriter strmWriter = null;
-            string FilePathname = @"Z:\TEXT\AVRIP 履歴.txt";
+            string FilePathname = FileControl.AVRIP_HISTROY_PATHNAME;
 
             // 行数の取得用のテキストファイルを読み込み
             strmReader = new System.IO.StreamReader(FilePathname, System.Text.Encoding.GetEncoding("UTF-16"));

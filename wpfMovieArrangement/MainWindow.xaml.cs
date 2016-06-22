@@ -27,8 +27,8 @@ namespace wpfMovieArrangement
         public readonly static RoutedCommand CahngeModeFilenameGenerate = new RoutedCommand("CahngeModeFilenameGenerate", typeof(MainWindow));
         public readonly static RoutedCommand CahngeModeKoreanPorno = new RoutedCommand("CahngeModeKoreanPorno", typeof(MainWindow));
 
-        private const string REGEX_MOVIE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm";
-        private const string REGEX_TARGETFILE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.rar";
+        private const string REGEX_MOVIE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*png$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm";
+        private const string REGEX_TARGETFILE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*png$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.rar";
         private const string REGEX_MOVIEONLY_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm";
 
         private List<MovieMaker> listMakers = null;
@@ -355,9 +355,9 @@ namespace wpfMovieArrangement
             try
             {
                 // 行数の取得用のテキストファイルを読み込み
-                strmReader = new System.IO.StreamReader(@"Z:\TEXT\AVRIP 履歴.txt", System.Text.Encoding.GetEncoding("UTF-16"));
+                strmReader = new System.IO.StreamReader(FileControl.AVRIP_HISTROY_PATHNAME, System.Text.Encoding.GetEncoding("UTF-16"));
 
-                FileInfo fileinfo = new FileInfo(@"Z:\TEXT\AVRIP 履歴.txt");
+                FileInfo fileinfo = new FileInfo(FileControl.AVRIP_HISTROY_PATHNAME);
                 dispctrlAvripHistoryAccessDateTime = fileinfo.LastWriteTime;
 
                 string line = "";
