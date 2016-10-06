@@ -1354,7 +1354,12 @@ namespace wpfMovieArrangement
                 if (cuttext == null || cuttext.Length <= 0)
                     continue;
 
+                //edittext = edittext.Replace(cuttext, "");
+                //Debug.Print("edittext 【" + Regex.Escape(edittext) + "】 cuttext【" + Regex.Escape(cuttext) + "】");
                 edittext = Regex.Replace(Regex.Escape(edittext), Regex.Escape(cuttext), "", RegexOptions.IgnoreCase);
+                if (edittext.Substring(0,1).Equals("\\"))
+                    edittext = edittext.Replace("\\", "");
+                //Debug.Print("【" + edittext + "】");
                 edittext = Regex.Unescape(edittext);
             }
             myMovieFile.MatchStrProductNumber = "";
