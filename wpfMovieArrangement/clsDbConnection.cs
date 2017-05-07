@@ -20,7 +20,8 @@ namespace wpfMovieArrangement
 
         public DbConnection()
         {
-            settings = "Data Source=tcp:vmesx-win2008r2srv;Initial Catalog=jhContents;Persist Security Info=True;User ID=sa;Password=11Jhirao";
+            //settings = "Data Source=tcp:vmesx-win2008r2srv;Initial Catalog=jhContents;Persist Security Info=True;User ID=sa;Password=11Jhirao";
+            settings = "Data Source=tcp:WinServer2016DB;Initial Catalog=jhContents;Persist Security Info=True;User ID=sa;Password=11Jhirao";
 
             dbcon = new SqlConnection(settings);
         }
