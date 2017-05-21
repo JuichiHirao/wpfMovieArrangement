@@ -12,6 +12,8 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Microsoft.VisualBasic.FileIO;
 using System.ComponentModel;
+using System.Windows.Controls.Primitives;
+using wpfMovieArrangement.service;
 
 namespace wpfMovieArrangement
 {
@@ -104,6 +106,22 @@ namespace wpfMovieArrangement
                 }
             }
 
+            private string _FilenameGenDate;
+
+            public string FilenameGenDate
+            {
+                get { return this._FilenameGenDate; }
+                set
+                {
+                    this._FilenameGenDate = value;
+                    var handler = this.PropertyChanged;
+                    if (handler != null)
+                    {
+                        handler(this, new PropertyChangedEventArgs("FilenameGenDate"));
+                    }
+                }
+            }
+
             public event PropertyChangedEventHandler PropertyChanged;
         }
 
@@ -111,7 +129,7 @@ namespace wpfMovieArrangement
         {
             InitializeComponent();
 
-            ViewData = new ViewModel { BasePath = "" };
+            ViewData = new ViewModel { BasePath = "", FilenameGenDate = "" };
             this.DataContext = ViewData;
 
             CommandBindings.Add(new CommandBinding(ChangeModeNormalRar, (s, ea) => { ChangeModeNormalRarExecute(s, ea); }, (s, ea) => ea.CanExecute = true));
@@ -332,9 +350,7 @@ namespace wpfMovieArrangement
             txtBasePath.Text = setting.BasePath;
             txtLabelPath.Text = setting.LabelPath;
             txtKoreanPornoPath.Text = setting.KoreanPornoPath;
-
-            //if (!CanGetDirectoryInfo())
-            //    return;
+            txtFilenameGenDate.Text = "";
 
             ChangeModeNormalMovieExecute(null, null);
 
@@ -350,7 +366,9 @@ namespace wpfMovieArrangement
             txtStatusBar.Background = statusbarMain.Background;
 
             dgridSelectTargetFilename.Width = statusbarMain.ActualWidth;
-
+            service.MovieImportService service = new service.MovieImportService();
+            listImportTarget = service.GetList(new DbConnection());
+            /*
             System.IO.StreamReader strmReader = null;
             try
             {
@@ -1150,6 +1168,20 @@ namespace wpfMovieArrangement
         private void btnPasteTitleText_Click(object sender, RoutedEventArgs e)
         {
             string titletext = ClipBoardCommon.GetText();
+
+            if (titletext.Trim().Length <= 10)
+            {
+                try
+                {
+                    DateTime dt = Convert.ToDateTime(titletext);
+                    txtFilenameGenDate.Text = dt.ToString("yyyy/MM/dd");
+                }
+                catch(Exception)
+                {
+
+                }
+                return;
+            }
             txtTitleText.Text = titletext;
 
             txtStatusBar.Text = "";
@@ -1485,39 +1517,38 @@ namespace wpfMovieArrangement
             lgridRegistMaker.Visibility = System.Windows.Visibility.Visible;
         }
 
+        private MovieImportData GetImportDataFromUIElement()
+        {
+            MovieImportData movieImportData = new MovieImportData();
+
+            movieImportData.CopyText = txtTitleText.Text;
+            movieImportData.Kind = Convert.ToInt32(txtKind.Text);
+            movieImportData.MatchProduct = txtMatchStr.Text;
+            movieImportData.ProductNumber = txtProductNumber.Text;
+            movieImportData.StrProductDate = txtFilenameGenDate.Text;
+            movieImportData.Maker = txtMaker.Text;
+            movieImportData.Title = txtTitle.Text;
+            movieImportData.Actresses = txtActresses.Text;
+            movieImportData.RarFlag = tbtnFileGeneTextAddRar.IsChecked;
+            movieImportData.Tag = "";
+            movieImportData.GenerateFilename();
+            movieImportData.Filename = txtFilenameGenerate.Text;
+
+            movieImportData.GenerateFilename();
+
+            return movieImportData;
+        }
+
         private void GenerateFilename(object sender, RoutedEventArgs e)
         {
-            DateTime dt;
-            string strDt = "";
-            try
-            {
-                dt = Convert.ToDateTime(txtFilenameGenDate.Text);
-                strDt = dt.ToString("yyyyMMdd");
-            }
-            catch (Exception)
-            {
-                dt = new DateTime(1900, 1, 1);
-            }
+            if (Validation.GetHasError(txtFilenameGenDate))
+                return;
 
-            string name = "";
-            if (txtKind.Text.Equals("1"))
-                name += "[AVRIP]";
-            else if (txtKind.Text.Equals("2"))
-                name += "[IVRIP]";
-            else if (txtKind.Text.Equals("3"))
-                name += "[裏AVRIP]";
-            else if (txtKind.Text.Equals("4"))
-                name += "[DMMR-AVRIP]";
-            else if (txtKind.Text.Equals("5"))
-                name += "[DMMR-AVRIP]";
+            MovieImportData movieImportData = GetImportDataFromUIElement();
 
-            name += "【" + txtMaker.Text + "】";
-            name += txtTitle.Text + " ";
-            name += "[" + txtProductNumber.Text + " " + strDt + "]";
-            if (txtActresses.Text.Trim().Length > 0)
-                name += "（" + txtActresses.Text + "）";
+            txtFilenameGenerate.Text = movieImportData.Filename;
 
-            txtFilenameGenerate.Text = name;
+            return;
 
         }
 
@@ -1528,15 +1559,13 @@ namespace wpfMovieArrangement
 
         private void btnGenerateFilenameCopy_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                Clipboard.SetData(DataFormats.Text, txtFilenameGenerate.Text);
-            }
-            catch (Exception ex)
-            {
-                txtStatusBar.Text = "クリップボードの取得に失敗しました " + ex.Message;
-                //MessageBox.Show("クリップボードの取得に失敗しました");
-            }
+            if (Validation.GetHasError(txtFilenameGenDate))
+                return;
+
+            MovieImportData movieImportData = GetImportDataFromUIElement();
+
+            service.MovieImportService service = new service.MovieImportService();
+            service.DbExport(movieImportData, new DbConnection());
         }
 
         private void btnPasteActresses_Click(object sender, RoutedEventArgs e)
@@ -1567,9 +1596,7 @@ namespace wpfMovieArrangement
         private void dgridMakers_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Delete)
-            {
                 OnSelectionRowDelete(null, null);
-            }
         }
 
         private void OnSelectionRowDelete(object sender, RoutedEventArgs e)
@@ -1814,18 +1841,18 @@ namespace wpfMovieArrangement
             dgridCheckExistFiles.Items.Filter = new Predicate<object>(FilterTargetFilesSearchFilter);
         }
 
-        private void btnFileGeneTextAddRar_Click(object sender, RoutedEventArgs e)
+        private void tbtnFileGeneTextAddRar_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
-            if (button == null)
+            ToggleButton tbutton = sender as ToggleButton;
+            if (tbutton == null)
                 return;
 
-            Regex regex = new Regex("^" + button.Content, RegexOptions.IgnoreCase);
+            Regex regex = new Regex("^" + tbutton.Content, RegexOptions.IgnoreCase);
 
             if (regex.IsMatch(txtFilenameGenerate.Text))
                 return;
 
-            txtFilenameGenerate.Text = button.Content + " " + txtFilenameGenerate.Text;
+            txtFilenameGenerate.Text = tbutton.Content + " " + txtFilenameGenerate.Text;
         }
     }
 }

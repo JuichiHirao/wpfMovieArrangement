@@ -312,7 +312,15 @@
                     <TextBox Name="txtProductNumber" Margin="5,3,5,3" Grid.Column="1" Grid.Row="1" />
                     <TextBlock Text="日付" Margin="15,3,5,3" Grid.Column="2" />
                     <Button Name="btnPasteDate" Width="40" Margin="5,5,5,3" HorizontalAlignment="Right" Grid.Column="2" Click="btnPasteDate_Click" />
-                    <TextBox Name="txtFilenameGenDate" Margin="5,3,5,3" Grid.Column="2" Grid.Row="1" LostFocus="GenerateFilename" />
+                    <TextBox Name="txtFilenameGenDate" Margin="5,3,5,3" Grid.Column="2" Grid.Row="1" LostFocus="GenerateFilename">
+                        <TextBox.Text>
+                            <Binding Path="FilenameGenDate" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <local:TextBoxDateRule />
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
                 </Grid>
                 <TextBlock Text="メーカー" Margin="5,3,5,3" Grid.Row="1" />
                 <TextBlock Text="一致部分" Margin="0,0,250,0" HorizontalAlignment="Right" Grid.Row="1" />
@@ -329,7 +337,7 @@
                         <CheckBox Name="chkActressFixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
                         <Button Name="btnClearActress" Content="クリア" Click="btnClearActress_Click" />
                     </WrapPanel>
-                    <Button Name="btnFileGeneTextAddRar" Content="RAR" Width="60" HorizontalAlignment="Right" Click="btnFileGeneTextAddRar_Click" />
+                    <ToggleButton Name="tbtnFileGeneTextAddRar" Content="RAR" Width="60" HorizontalAlignment="Right" Click="tbtnFileGeneTextAddRar_Click" />
                 </Grid>
                 <TextBox Name="txtActresses" Margin="5,3,5,3" Grid.Row="6" TextWrapping="Wrap" />
                 <TextBox Name="txtFilenameGenerate" Margin="5,3,5,3" HorizontalAlignment="Left" FontSize="24" Grid.Row="7" TextWrapping="Wrap" />

@@ -216,7 +216,7 @@ namespace wpfMovieArrangement
         }
 
         /// <summary>
-        /// 指定されたＳＱＬ文を実行する
+        /// 指定されたSQL文を実行する
         /// </summary>
         public int execSqlCommand(string mySqlCommand)
         {
