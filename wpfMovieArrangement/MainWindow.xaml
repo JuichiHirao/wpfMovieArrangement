@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wpfMovieArrangement"
         mc:Ignorable="d"
-        Title="MainWindow" Height="1000" Width="800" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged_1" Closed="Window_Closed_1">
+        Title="Test" Height="1000" Width="800" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged_1" Closed="Window_Closed_1">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalRar}"/>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalMovie}"/>
@@ -78,16 +78,16 @@
         <StatusBar Name="statusbarMain" DockPanel.Dock="Bottom"
                    Height="60" Width="Auto" Margin="0,0,0,0">
             <StatusBarItem Name="stsbaritemDispDetail">
-                <TextBlock Name="txtStatusBar" Width="500" TextWrapping="Wrap" />
+                <TextBlock Name="txtStatusBar" Width="Auto" TextWrapping="Wrap" />
             </StatusBarItem>
         </StatusBar>
-        <Grid Name="lgridMain" Visibility="Collapsed">
+        <Grid Name="lgridMain" Visibility="Visible">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="40"/>
                 <RowDefinition Height="180"/>
                 <RowDefinition Height="40"/>
-                <RowDefinition Height="40"/>
+                <RowDefinition Height="80"/>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="60"/>
             </Grid.RowDefinitions>
@@ -98,7 +98,7 @@
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="120" />
-                    <ColumnDefinition Width="450" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="80" />
                 </Grid.ColumnDefinitions>
                 <Button Name="btnBasePathPaste" Content="貼付" Width="100" Margin="5,0,5,0" Click="btnBasePathPaste_Click" />
@@ -154,12 +154,18 @@
                     <DataGridTextColumn Header="結果" Binding="{Binding Path=Message}" FontSize="9" />
                 </DataGrid.Columns>
             </DataGrid>
-            <TextBlock Name="txtbSourceFilename" Margin="5,5,5,5" FontSize="11" TextWrapping="Wrap" Grid.Row="3" />
+            <TextBlock Name="txtbTargetImportId" Width="30" Margin="5,5,5,5" HorizontalAlignment="Left" FontSize="11" TextWrapping="Wrap" Grid.Row="3" />
+            <TextBlock Name="txtbSourceFilename" Margin="45,5,5,5" FontSize="11" TextWrapping="Wrap" Grid.Row="3" />
             <Grid Name="lgridDateCopyDestination" Margin="15,3,15,3" Grid.Row="4">
-                <Button Name="btnPasteDestination" Content="日付コピー先ファイル貼付" Margin="5,0,5,0" Click="btnPasteDestination_Click" />
+                <Button Name="btnPasteDestination" Content="日付コピー先ファイル貼付" Margin="5,0" Click="btnPasteDestination_Click" />
             </Grid>
             <Grid Name="lgridNormalChangeFilename" Grid.Row="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
                 <TextBox Name="txtChangeFileName" Width="Auto" Height="30" Margin="5,5,5,5" MouseDoubleClick="txtChangeFileName_MouseDoubleClick" />
+                <TextBox Name="txtChangeTag" Width="Auto" Height="30" Margin="5,5,5,5" Grid.Row="1" />
             </Grid>
             <!--<Button Name="btnAllSelect" Content="全選択" Width="60" Margin="5,0,5,0" Click="btnAllSelect_Click" HorizontalAlignment="Right" Grid.Row="3"/>-->
             <DataGrid Name="dgridDestFile" Width="Auto" FontSize="16" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Grid.Row="5" MouseDoubleClick="dgridDestFile_MouseDoubleClick">
@@ -185,7 +191,7 @@
             </DataGrid>
             <Button Name="btnExecuteNameChange" Content="実行" Margin="50,5,50,5" Grid.Row="6" Click="btnExecuteNameChange_Click" />
             <!-- 右クリックでファイル名変更選択時 -->
-            <Grid Name="gridRenameFile" Grid.RowSpan="7" Visibility="Hidden">
+            <Grid Name="gridRenameFile" Grid.RowSpan="7" Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="100" />
                     <RowDefinition Height="*" />
@@ -217,34 +223,6 @@
                 </Grid>
                 <Button Content="変更実行" Name="btnRenameFileExecute" FontSize="24" Height="60" Width="300" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="2" Click="btnRenameFileExecute_Click" />
                 <Button Content="キャンセル" Name="btnRenameFileCancel" FontSize="24" Height="40" Width="200" Margin="0,0,0,10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Row="2" Click="btnRenameFileCancel_Click" />
-            </Grid>
-            <!-- 出力ファイル名をダブルクリックした時 -->
-            <Grid Name="gridSelectTargetFilename" Grid.RowSpan="6" Visibility="Hidden">
-                <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition Height="50" />
-                </Grid.RowDefinitions>
-                <Border Margin="2,2,2,2" Grid.RowSpan="2">
-                    <Border.Background>
-                        <RadialGradientBrush Opacity="0.8">
-                            <GradientStop Color="#FFA3A7B9" Offset="0"/>
-                            <GradientStop Color="#FF3F3E4B" Offset="1"/>
-                            <GradientStop Color="#FF7B98C1" Offset="0.457"/>
-                        </RadialGradientBrush>
-                    </Border.Background>
-                </Border>
-                <DataGrid Name="dgridSelectTargetFilename" Width="Auto"  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgridSelectTargetFilename_MouseDoubleClick" >
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="ファイル名">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Name="Name" Text="{Binding Path=.}" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-                <Button Content="キャンセル" Name="btnSelectCancel" FontSize="24" Height="40" Width="200" Margin="5,5,5,5" HorizontalAlignment="Center" Grid.Row="1" Click="btnSelectCancel_Click" />
             </Grid>
         </Grid>
         <!-- End of lgridMain -->
@@ -328,7 +306,7 @@
                 <Button Content="追加" Name="btnOpenRegistMakerFromData" Width="80" Height="30" HorizontalAlignment="Right" Grid.Row="1" Click="btnOpenRegistMaker_Click" />
                 <TextBox Name="txtMaker" Margin="5,3,5,3" Grid.Row="2" TextWrapping="Wrap" MouseDoubleClick="txtMaker_MouseDoubleClick" />
                 <TextBlock Text="タイトル" Margin="5,3,5,3" Grid.Row="3" />
-                <TextBox Name="txtTitle" Margin="5,3,5,3" Grid.Row="4" TextWrapping="Wrap" LostFocus="GenerateFilename" />
+                <TextBox Name="txtTitle" Margin="5,3,5,3" Grid.Row="4" TextWrapping="Wrap" LostFocus="GenerateFilename" MouseDoubleClick="txtChangeFileName_MouseDoubleClick" />
                 <Grid Margin="5,3,5,3" VerticalAlignment="Bottom" Grid.Row="5">
                     <WrapPanel Orientation="Horizontal">
                         <TextBlock Text="出演" Margin="5,0,5,0"  />
@@ -476,7 +454,34 @@
             </Grid>
         </Grid>
         <!-- End of lgridFilenameGenerate -->
-        <Grid Name="lgridKoreanPornoArrange" Visibility="Hidden" >
+        <Grid Name="gridSelectTargetFilename" Grid.RowSpan="6" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+            <Border Margin="2,2,2,2" Grid.RowSpan="2">
+                <Border.Background>
+                    <RadialGradientBrush Opacity="0.8">
+                        <GradientStop Color="#FFA3A7B9" Offset="0"/>
+                        <GradientStop Color="#FF3F3E4B" Offset="1"/>
+                        <GradientStop Color="#FF7B98C1" Offset="0.457"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+            <DataGrid Name="dgridSelectTargetFilename" Width="Auto"  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgridSelectTargetFilename_MouseDoubleClick" >
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="ファイル名">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Name="Name" Text="{Binding Path=Filename}" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Button Content="キャンセル" Name="btnSelectCancel" FontSize="24" Height="40" Width="200" Margin="5,5,5,5" HorizontalAlignment="Center" Grid.Row="1" Click="btnSelectCancel_Click" />
+        </Grid>
+        <Grid Name="lgridKoreanPornoArrange" Visibility="Collapsed" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition />

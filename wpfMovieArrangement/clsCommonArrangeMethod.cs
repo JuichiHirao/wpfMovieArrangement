@@ -225,7 +225,7 @@ namespace wpfMovieArrangement
                 }
             }
         }
-        public void SetDbMovieFilesInfo()
+        public void SetDbMovieFilesInfo(string myTag)
         {
             DatabaseMovieFile = new MovieFileContents();
 
@@ -271,6 +271,8 @@ namespace wpfMovieArrangement
             }
             // 品番、販売日を設定
             DatabaseMovieFile.Parse();
+
+            DatabaseMovieFile.Tag = myTag;
         }
 
         public void Execute()
@@ -315,15 +317,15 @@ namespace wpfMovieArrangement
             }
         }
 
-        public void DatabaseExport()
+        public void DatabaseExport(DbConnection myDbCon)
         {
             DbConnection dbcon = new DbConnection();
 
             // データベースへ登録
-            string sqlCommand = "INSERT INTO MOVIE_FILES (NAME, SIZE, FILE_DATE, LABEL, SELL_DATE, PRODUCT_NUMBER, FILE_COUNT, EXTENSION) VALUES( @pName, @pSize, @pFileDate, @pLabel, @pSellDate, @pProductNumber, @pFileCount, @pExtension )";
+            string sqlCommand = "INSERT INTO MOVIE_FILES (NAME, SIZE, FILE_DATE, LABEL, SELL_DATE, PRODUCT_NUMBER, FILE_COUNT, EXTENSION, TAG) VALUES( @pName, @pSize, @pFileDate, @pLabel, @pSellDate, @pProductNumber, @pFileCount, @pExtension, @Tag )";
 
             SqlCommand command = new SqlCommand(sqlCommand, dbcon.getSqlConnection());
-            SqlParameter[] sqlparams = new SqlParameter[8];
+            SqlParameter[] sqlparams = new SqlParameter[9];
             // Create and append the parameters for the Update command.
             sqlparams[0] = new SqlParameter("@pName", SqlDbType.VarChar);
             sqlparams[0].Value = DatabaseMovieFile.Name;
@@ -351,6 +353,9 @@ namespace wpfMovieArrangement
 
             sqlparams[7] = new SqlParameter("@pExtension", SqlDbType.VarChar);
             sqlparams[7].Value = DatabaseMovieFile.Extension;
+
+            sqlparams[8] = new SqlParameter("@Tag", SqlDbType.VarChar);
+            sqlparams[8].Value = DatabaseMovieFile.Tag;
 
             dbcon.SetParameter(sqlparams);
             dbcon.execSqlCommand(sqlCommand);

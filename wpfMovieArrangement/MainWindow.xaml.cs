@@ -38,10 +38,12 @@ namespace wpfMovieArrangement
         private int MaxListMakers = 0;
         private List<MovieFileContents> listFilesContents = null;
         private List<string> listTextTargetFileName = null;
+        private List<MovieImportData> listImportTarget = null;
 
         private List<MovieMaker> dispinfoSelectDataGridMakers = null;
         private List<KoreanPornoData> dispinfoSelectDataGridKoreanPorno = null;
         private string dispinfoKoreanPornoStorePath = null;
+        private MovieImportData dispinfoSelectMovieImportData= null;
 
         SettingXmlControl settingControl = null;
         Setting setting = null;
@@ -368,74 +370,15 @@ namespace wpfMovieArrangement
             dgridSelectTargetFilename.Width = statusbarMain.ActualWidth;
             service.MovieImportService service = new service.MovieImportService();
             listImportTarget = service.GetList(new DbConnection());
-            /*
-            System.IO.StreamReader strmReader = null;
-            try
-            {
-                // 行数の取得用のテキストファイルを読み込み
-                strmReader = new System.IO.StreamReader(FileControl.AVRIP_HISTROY_PATHNAME, System.Text.Encoding.GetEncoding("UTF-16"));
 
-                FileInfo fileinfo = new FileInfo(FileControl.AVRIP_HISTROY_PATHNAME);
-                dispctrlAvripHistoryAccessDateTime = fileinfo.LastWriteTime;
-
-                string line = "";
-                bool isFinished = false;
-                bool isStart = false;
-                while ((line = strmReader.ReadLine()) != null)
-                {
-                    if (line.Trim().Length <= 0)
-                        continue;
-
-                    if (isFinished == false)
-                    {
-                        if (line.Equals("--------------------------------------START-------------------------------------------"))
-                        {
-                            isStart = true;
-                            continue;
-                        }
-                        else
-                        {
-                            if (isStart)
-                                listTextTargetFileName.Add(line);
-                        }
-                    }
-
-                    if (isFinished == false && line.Equals("【【【完了】】】"))
-                    {
-                        isFinished = true;
-                        continue;
-                    }
-
-                    if (!isFinished)
-                        continue;
-
-                    listTextFileName.Add(line);
-
-                }
-                MovieFileContentsParent parent = new MovieFileContentsParent();
-
-                listFilesContents = parent.GetDbContents();
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-            }
-            finally
-            {
-                if (strmReader != null)
-                    strmReader.Close();
-            }
+            MovieFileContentsParent parent = new MovieFileContentsParent();
+            listFilesContents = parent.GetDbContents();
 
             DbConnection localDbCon = new DbConnection();
             txtbDbNowDate.Text = localDbCon.getDateStringSql("SELECT GETDATE()");
 
-            //lgridKoreanPornoArrange.Visibility = System.Windows.Visibility.Visible;
-            //lgridMain.Visibility = System.Windows.Visibility.Collapsed;
             dispinfoKoreanPornoStorePath = txtKoreanPornoPath.Text;
-
             dgridKoreanPorno.ItemsSource = KoreanPorno.GetFolderData(dispinfoKoreanPornoStorePath);
-
-            //            listTextFileName.Add();
         }
         public List<TargetFiles> GetDestFiles(string myPath, string myTargetExtention)
         {
@@ -618,34 +561,6 @@ namespace wpfMovieArrangement
                     }
                 }
             }
-
-
-            /* Original Code
-                // 編集可能なセルの場合のみ実行
-                if (cell != null && !cell.IsEditing && !cell.IsReadOnly)
-                {
-                    // フォーカスが無い場合はフォーカスを取得
-                    if (!cell.IsFocused)
-                        cell.Focus();
-
-                    DataGrid dataGrid = FindVisualParent<DataGrid>(cell);
-                    if (dataGrid != null)
-                    {
-                        if (dataGrid.SelectionUnit != DataGridSelectionUnit.FullRow)
-                        {
-                            if (!cell.IsSelected)
-                                cell.IsSelected = true;
-                        }
-                        else
-                        {
-                            DataGridRow row = FindVisualParent<DataGridRow>(cell);
-
-                            if (row != null && !row.IsSelected)
-                                row.IsSelected = true;
-                        }
-                    }
-                }
-             */
         }
         static T FindVisualParent<T>(UIElement element) where T : UIElement
         {
@@ -717,7 +632,7 @@ namespace wpfMovieArrangement
                             dest.FileInfo.LastWriteTime = srcfile.ListUpdateDate;
                             isFinished = true;
                         }
-                        catch (UnauthorizedAccessException ex)
+                        catch (UnauthorizedAccessException)
                         {
                             MessageBoxResult res = MessageBox.Show("ファイルの読取専用を外して下さい、再実行しますか？", "", MessageBoxButton.YesNo);
 
@@ -783,16 +698,36 @@ namespace wpfMovieArrangement
                 fileControl.SetMovieActionInfo();
 
                 // データベースへ登録用の情報を生成する
-                fileControl.SetDbMovieFilesInfo();
+                fileControl.SetDbMovieFilesInfo(txtChangeTag.Text);
+
+                DbConnection dbcon = new DbConnection();
+
+                try
+                {
+                    dbcon.BeginTransaction("MOVIE_REGISTER");
+
+                    // データベースへ登録
+                    fileControl.DatabaseExport(dbcon);
+
+                    // MOVIE_IMPORTから削除
+                    MovieImportService service = new MovieImportService();
+                    service.DbDelete(dispinfoSelectMovieImportData, dbcon);
+
+                    dbcon.CommitTransaction();
+                }
+                catch (Exception ex)
+                {
+                    Debug.Write(ex);
+                    dbcon.RollbackTransaction();
+                    MessageBox.Show(ex.Message);
+                    return;
+                }
 
                 // 動画、画像ファイルの移動、日付コピー等の実行
                 fileControl.Execute();
 
-                // データベースへ登録
-                fileControl.DatabaseExport();
-
                 // テキストファイルから削除
-                fileControl.RemoveTextFilenameLine(txtbSourceFilename.Text);
+                //fileControl.RemoveTextFilenameLine(txtbSourceFilename.Text);
             }
             catch (Exception exp)
             {
@@ -860,6 +795,7 @@ namespace wpfMovieArrangement
             Window_Loaded(null, null);
 
             txtChangeFileName.Text = "";
+            txtChangeTag.Text = "";
             txtSearch.Text = "";
             dgridArrangementTarget.Items.Filter = null;
             dgridDestFile.Items.Filter = null;
@@ -1096,48 +1032,56 @@ namespace wpfMovieArrangement
 
         private void txtChangeFileName_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            dgridSelectTargetFilename.ItemsSource = listTextTargetFileName;
+            dgridSelectTargetFilename.ItemsSource = listImportTarget;
+            if (dispctrlMode == MODE_FILENAMEGENERATE)
+                lgridFilenameGenerate.Visibility = System.Windows.Visibility.Collapsed;
+            else
+                lgridMain.Visibility = System.Windows.Visibility.Collapsed;
+
             gridSelectTargetFilename.Visibility = System.Windows.Visibility.Visible;
         }
 
         private void btnSelectCancel_Click(object sender, RoutedEventArgs e)
         {
-            gridSelectTargetFilename.Visibility = System.Windows.Visibility.Hidden;
+            if (dispctrlMode == MODE_FILENAMEGENERATE)
+                lgridFilenameGenerate.Visibility = System.Windows.Visibility.Visible;
+            else
+                lgridMain.Visibility = System.Windows.Visibility.Visible;
 
+            dispinfoSelectMovieImportData = null;
+
+            gridSelectTargetFilename.Visibility = System.Windows.Visibility.Hidden;
         }
 
         private void dgridSelectTargetFilename_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            Regex regex = new Regex("^RAR", RegexOptions.IgnoreCase);
+            dispinfoSelectMovieImportData = (MovieImportData)dgridSelectTargetFilename.SelectedItem;
 
-            string selectText = dgridSelectTargetFilename.SelectedItem.ToString();
-            if (regex.IsMatch(dgridSelectTargetFilename.SelectedItem.ToString()))
+            if (dispctrlMode == MODE_FILENAMEGENERATE)
             {
-                ChangeModeNormalRarExecute(null, null);
-                selectText = Regex.Replace(selectText, "^RAR[ ]*",  "");
+                SetUIElementFromImportData(dispinfoSelectMovieImportData);
+
+                lgridFilenameGenerate.Visibility = System.Windows.Visibility.Visible;
             }
-
-            foreach (TargetFiles file in dgridDestFile.ItemsSource)
-                file.IsSelected = false;
-
-            regex = new Regex(".* \\[.* ");
-            txtbSourceFilename.Text = dgridSelectTargetFilename.SelectedItem.ToString();
-            txtChangeFileName.Text = selectText;
-
-            string WorkStr = "";
-            if (regex.IsMatch(txtChangeFileName.Text))
+            else
             {
-                WorkStr = Regex.Replace(txtChangeFileName.Text, ".* \\[", "");
-                string HyphenStr = Regex.Replace(WorkStr, " [0-9]*.*", "");
-                string HyphenWithoutStr = HyphenStr.Replace("-", "");
+                if ((bool)dispinfoSelectMovieImportData.RarFlag)
+                {
+                    ChangeModeNormalRarExecute(null, null);
 
-                if (HyphenStr.Equals(HyphenWithoutStr))
-                    txtSearch.Text = HyphenStr;
-                else
-                    txtSearch.Text = HyphenStr + " " + HyphenWithoutStr;
+                    foreach (TargetFiles file in dgridDestFile.ItemsSource)
+                        file.IsSelected = false;
+                }
+
+                txtSearch.Text = dispinfoSelectMovieImportData.GetFileSearchString();
+
+                txtbSourceFilename.Text = dispinfoSelectMovieImportData.Filename;
+                txtChangeFileName.Text = dispinfoSelectMovieImportData.Filename;
 
                 btnSearch_Click(null, null);
+                lgridMain.Visibility = System.Windows.Visibility.Visible;
             }
+            txtbTargetImportId.Text = Convert.ToString(dispinfoSelectMovieImportData.Id);
 
             gridSelectTargetFilename.Visibility = Visibility.Hidden;
         }
@@ -1537,6 +1481,20 @@ namespace wpfMovieArrangement
             movieImportData.GenerateFilename();
 
             return movieImportData;
+        }
+
+        private void SetUIElementFromImportData(MovieImportData myData)
+        {
+            txtTitleText.Text = myData.CopyText;
+            txtKind.Text = myData.Kind.ToString();
+            txtMatchStr.Text = myData.MatchProduct;
+            txtFilenameGenDate.Text = myData.ProductDate.ToString("yyyy/MM/dd");
+            txtProductNumber.Text = myData.ProductNumber;
+            txtMaker.Text = myData.Maker;
+            txtTitle.Text = myData.Title;
+            txtActresses.Text = myData.Actresses;
+            tbtnFileGeneTextAddRar.IsChecked = myData.RarFlag;
+            txtFilenameGenerate.Text = myData.Filename;
         }
 
         private void GenerateFilename(object sender, RoutedEventArgs e)

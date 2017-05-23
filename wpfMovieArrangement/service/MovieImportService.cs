@@ -80,6 +80,35 @@ namespace wpfMovieArrangement.service
             return;
         }
 
+        public void DbDelete(MovieImportData myData, DbConnection myDbCon)
+        {
+            DbConnection dbcon;
+            string sqlcmd = "";
+
+            // 引数にコネクションが指定されていた場合は指定されたコネクションを使用
+            if (myDbCon != null)
+                dbcon = myDbCon;
+            else
+                dbcon = new DbConnection();
+
+            sqlcmd = "DELETE FROM MOVIE_IMPORT WHERE ID = @Id ";
+
+            SqlCommand scmd = new SqlCommand(sqlcmd, dbcon.getSqlConnection());
+            DataTable dtSaraly = new DataTable();
+
+            List<SqlParameter> listSqlParams = new List<SqlParameter>();
+
+            SqlParameter sqlparam = new SqlParameter("@Id", SqlDbType.Int);
+            sqlparam.Value = myData.Id;
+            listSqlParams.Add(sqlparam);
+
+            dbcon.SetParameter(listSqlParams.ToArray());
+
+            dbcon.execSqlCommand(sqlcmd);
+
+            return;
+        }
+
         public List<MovieImportData> GetList(DbConnection myDbCon)
         {
             List<MovieImportData> listData = new List<MovieImportData>();

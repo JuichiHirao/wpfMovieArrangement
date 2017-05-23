@@ -30,6 +30,7 @@ namespace wpfMovieArrangement
         public int Rating { get; set; }
         public string Comment { get; set; }
         public string Remark { get; set; }
+        public string Tag { get; set; }
 
         // 以下はParseFromJavSiteTextで使用するプロパティ
         public string EditPasteText { get; set; }

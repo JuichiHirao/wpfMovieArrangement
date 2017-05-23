@@ -18,6 +18,11 @@ namespace wpfMovieArrangement
 
         public string ProductNumber { get; set; }
 
+        public string GetFileSearchString()
+        {
+            return ProductNumber + " " + ProductNumber.Replace("-", "");
+        }
+
         private string _StrProductDate;
         public string StrProductDate
         {
