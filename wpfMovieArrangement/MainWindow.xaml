@@ -317,7 +317,14 @@
                     </WrapPanel>
                     <ToggleButton Name="tbtnFileGeneTextAddRar" Content="RAR" Width="60" HorizontalAlignment="Right" Click="tbtnFileGeneTextAddRar_Click" />
                 </Grid>
-                <TextBox Name="txtActresses" Margin="5,3,5,3" Grid.Row="6" TextWrapping="Wrap" />
+                <Grid Grid.Row="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Name="txtActresses" Margin="5,3,5,3" TextWrapping="Wrap" />
+                    <TextBox Name="txtTag" Margin="5,3,5,3" Grid.Column="1" TextWrapping="Wrap" />
+                </Grid>
                 <TextBox Name="txtFilenameGenerate" Margin="5,3,5,3" HorizontalAlignment="Left" FontSize="24" Grid.Row="7" TextWrapping="Wrap" />
                 <Grid Grid.Row="8">
                     <Grid.RowDefinitions>

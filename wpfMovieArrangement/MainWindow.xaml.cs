@@ -356,14 +356,10 @@ namespace wpfMovieArrangement
 
             ChangeModeNormalMovieExecute(null, null);
 
-            List<string> listTextFileName = new List<string>();
-            listTextTargetFileName = new List<string>();
-
             OnGridTargetDisplay(null, null);
 
             dgridDestFile.ItemsSource = GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
 
-            //txtStatusBar.IsReadOnly = true;
             txtStatusBar.Width = statusbarMain.ActualWidth;
             txtStatusBar.Background = statusbarMain.Background;
 
@@ -405,6 +401,7 @@ namespace wpfMovieArrangement
                 targetfiles.ListUpdateDate = fileinfo.LastWriteTime;
                 targetfiles.FileSize = fileinfo.Length;
                 targetfiles.DispRelativePath = fileinfo.Directory.ToString().Replace(@txtBasePath.Text + "\\", "").Replace(@txtBasePath.Text, "");
+                targetfiles.IsSelected = false;
 
                 listDestFIles.Add(targetfiles);
             }
@@ -669,14 +666,6 @@ namespace wpfMovieArrangement
                 return;
             }
 
-            List<TargetFiles> listSelected = new List<TargetFiles>();
-
-            foreach (TargetFiles files in dgridDestFile.ItemsSource)
-            {
-                if (files.IsSelected)
-                    listSelected.Add(files);
-            }
-
             FileControl fileControl = new FileControl();
 
             fileControl.BasePath = txtBasePath.Text;
@@ -725,9 +714,6 @@ namespace wpfMovieArrangement
 
                 // 動画、画像ファイルの移動、日付コピー等の実行
                 fileControl.Execute();
-
-                // テキストファイルから削除
-                //fileControl.RemoveTextFilenameLine(txtbSourceFilename.Text);
             }
             catch (Exception exp)
             {
@@ -737,8 +723,13 @@ namespace wpfMovieArrangement
             }
             finally
             {
+                // 選択中のファイル一覧はクリアする（次の対象動画になってしまうので）
                 foreach (TargetFiles file in dgridDestFile.ItemsSource)
                     file.IsSelected = false;
+
+                // フィルターをクリアしないと再取得した直後に動作して不要なチェックが付いてしまう
+                dgridDestFile.Items.Filter = null;
+                dgridDestFile.Items.Filter = null;
             }
 
             // RARファイルの場合は一式を削除
@@ -797,8 +788,6 @@ namespace wpfMovieArrangement
             txtChangeFileName.Text = "";
             txtChangeTag.Text = "";
             txtSearch.Text = "";
-            dgridArrangementTarget.Items.Filter = null;
-            dgridDestFile.Items.Filter = null;
         }
 
         private void menuitemNameCopy(object sender, RoutedEventArgs e)
@@ -872,7 +861,8 @@ namespace wpfMovieArrangement
             int MatchCount = 0;
             foreach (string word in arrSearchWord)
             {
-                //if (mTarget.Name.ToUpper().IndexOf(word.ToUpper()) >= 0)
+                if (word.Length <= 0)
+                    continue;
 
                 if (filename.ToUpper().IndexOf(word.ToUpper()) >= 0)
                     MatchCount++;
@@ -964,6 +954,9 @@ namespace wpfMovieArrangement
                     int MatchCount = 0;
                     foreach (string word in arrSearchWord)
                     {
+                        if (word.Length <= 0)
+                            continue;
+
                         if (data.Name.ToUpper().IndexOf(word.ToUpper()) >= 0)
                             MatchCount++;
                     }
@@ -1127,6 +1120,26 @@ namespace wpfMovieArrangement
                 return;
             }
             txtTitleText.Text = titletext;
+
+            MovieImportData importData;
+            if (titletext.IndexOf("RAR") == 0
+                || titletext.IndexOf("[AV") == 0
+                || titletext.IndexOf("[IV") == 0
+                || titletext.IndexOf("[裏") == 0)
+            {
+                importData = new MovieImportData(titletext);
+
+                txtKind.Text = Convert.ToString(importData.Kind);
+                txtFilenameGenDate.Text = importData.ProductDate.ToString("yyyy/MM/dd");
+                txtProductNumber.Text = importData.ProductNumber;
+                txtMaker.Text = importData.Maker;
+                txtTitle.Text = importData.Title;
+
+                if (importData.RarFlag == true)
+                    tbtnFileGeneTextAddRar.IsChecked = true;
+
+                return;
+            }
 
             txtStatusBar.Text = "";
             if (chkKindFixed.IsChecked == null || !(bool)chkKindFixed.IsChecked) txtKind.Text = "";
@@ -1474,7 +1487,7 @@ namespace wpfMovieArrangement
             movieImportData.Title = txtTitle.Text;
             movieImportData.Actresses = txtActresses.Text;
             movieImportData.RarFlag = tbtnFileGeneTextAddRar.IsChecked;
-            movieImportData.Tag = "";
+            movieImportData.Tag = txtTag.Text;
             movieImportData.GenerateFilename();
             movieImportData.Filename = txtFilenameGenerate.Text;
 
@@ -1495,6 +1508,21 @@ namespace wpfMovieArrangement
             txtActresses.Text = myData.Actresses;
             tbtnFileGeneTextAddRar.IsChecked = myData.RarFlag;
             txtFilenameGenerate.Text = myData.Filename;
+        }
+
+        private void ClearUIElement()
+        {
+            txtTitleText.Text = "";
+            txtKind.Text = "";
+            txtMatchStr.Text = "";
+            txtFilenameGenDate.Text = "";
+            txtProductNumber.Text = "";
+            txtMaker.Text = "";
+            txtTitle.Text = "";
+            txtActresses.Text = "";
+            txtTag.Text = "";
+            tbtnFileGeneTextAddRar.IsChecked = false;
+            txtFilenameGenerate.Text = "";
         }
 
         private void GenerateFilename(object sender, RoutedEventArgs e)
@@ -1523,7 +1551,11 @@ namespace wpfMovieArrangement
             MovieImportData movieImportData = GetImportDataFromUIElement();
 
             service.MovieImportService service = new service.MovieImportService();
-            service.DbExport(movieImportData, new DbConnection());
+            movieImportData = service.DbExport(movieImportData, new DbConnection());
+
+            ClearUIElement();
+
+            listImportTarget.Add(movieImportData);
         }
 
         private void btnPasteActresses_Click(object sender, RoutedEventArgs e)

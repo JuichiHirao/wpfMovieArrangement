@@ -10,7 +10,7 @@ namespace wpfMovieArrangement.service
 {
     class MovieImportService
     {
-        public void DbExport(MovieImportData myData, DbConnection myDbCon)
+        public MovieImportData DbExport(MovieImportData myData, DbConnection myDbCon)
         {
             DbConnection dbcon;
             string sqlcmd = "";
@@ -77,7 +77,12 @@ namespace wpfMovieArrangement.service
 
             dbcon.execSqlCommand(sqlcmd);
 
-            return;
+            MovieImportData data = GetNewest(dbcon);
+
+            if (!data.ProductNumber.Equals(myData.ProductNumber))
+                throw new Exception("最新のデータが違うため、取得出来ませんでした");
+
+            return data;
         }
 
         public void DbDelete(MovieImportData myData, DbConnection myDbCon)
@@ -109,6 +114,64 @@ namespace wpfMovieArrangement.service
             return;
         }
 
+        public MovieImportData GetNewest(DbConnection myDbCon)
+        {
+            MovieImportData newestData = new MovieImportData();
+
+            DbConnection dbcon;
+            string sqlcmd = "";
+
+            // 引数にコネクションが指定されていた場合は指定されたコネクションを使用
+            if (myDbCon != null)
+                dbcon = myDbCon;
+            else
+                dbcon = new DbConnection();
+
+            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE ";
+            sqlcmd = sqlcmd + "FROM MOVIE_IMPORT ";
+            sqlcmd = sqlcmd + "ORDER BY CREATE_DATE DESC";
+
+            SqlDataReader reader = null;
+            try
+            {
+                reader = myDbCon.GetExecuteReader(sqlcmd);
+
+                if (reader.IsClosed)
+                {
+                    //_logger.Debug("reader.IsClosed");
+                    throw new Exception("MOVIE_SITESTOREの取得でreaderがクローズされています");
+                }
+
+                if (reader.Read())
+                {
+                    newestData.Id = DbExportCommon.GetDbInt(reader, 0);
+                    newestData.CopyText = DbExportCommon.GetDbString(reader, 1);
+                    newestData.Kind = DbExportCommon.GetDbInt(reader, 2);
+                    newestData.MatchProduct = DbExportCommon.GetDbString(reader, 3);
+                    newestData.ProductNumber = DbExportCommon.GetDbString(reader, 4);
+                    newestData.ProductDate = DbExportCommon.GetDbDateTime(reader, 5);
+                    newestData.Maker = DbExportCommon.GetDbString(reader, 6);
+                    newestData.Title = DbExportCommon.GetDbString(reader, 7);
+                    newestData.Actresses = DbExportCommon.GetDbString(reader, 8);
+                    newestData.RarFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 9));
+                    newestData.Tag = DbExportCommon.GetDbString(reader, 10);
+                    newestData.Filename = DbExportCommon.GetDbString(reader, 11);
+                    newestData.CreateDate = DbExportCommon.GetDbDateTime(reader, 12);
+                    newestData.UpdateDate = DbExportCommon.GetDbDateTime(reader, 13);
+                }
+            }
+            finally
+            {
+                reader.Close();
+            }
+
+            reader.Close();
+
+            myDbCon.closeConnection();
+
+            return newestData;
+        }
+
         public List<MovieImportData> GetList(DbConnection myDbCon)
         {
             List<MovieImportData> listData = new List<MovieImportData>();
@@ -124,6 +187,7 @@ namespace wpfMovieArrangement.service
 
             sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE ";
             sqlcmd = sqlcmd + "FROM MOVIE_IMPORT ";
+            sqlcmd = sqlcmd + "ORDER BY CREATE_DATE ";
 
             SqlDataReader reader = null;
             try
@@ -172,5 +236,6 @@ namespace wpfMovieArrangement.service
 
             return listData;
         }
+
     }
 }

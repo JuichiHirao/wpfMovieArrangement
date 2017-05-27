@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace wpfMovieArrangement
@@ -62,6 +63,10 @@ namespace wpfMovieArrangement
             {
                 if (value == null)
                     _RarFlag = false;
+                else
+                {
+                    _RarFlag = (bool)value;
+                }
             }
         }
 
@@ -87,7 +92,7 @@ namespace wpfMovieArrangement
             else if (Kind == 4)
                 name += "[DMMR-AVRIP]";
             else if (Kind == 5)
-                name += "[DMMR-AVRIP]";
+                name += "[DMMR-IVRIP]";
 
             name += "【" + Maker + "】";
             name += Title + " ";
@@ -96,6 +101,75 @@ namespace wpfMovieArrangement
                 name += "（" + Actresses + "）";
 
             Filename = name;
+        }
+
+        public MovieImportData()
+        {
+
+        }
+
+        public MovieImportData(string myPasteText)
+        {
+            string pasteText = "";
+
+            if (myPasteText.IndexOf("RAR") == 0)
+            {
+                pasteText = myPasteText.Replace("RAR ", "");
+                _RarFlag = true;
+            }
+            else
+                pasteText = myPasteText;
+
+            if (pasteText.IndexOf("[AVRIP]") == 0
+                || pasteText.IndexOf("[IVRIP]") == 0
+                || pasteText.IndexOf("[裏AVRIP]") == 0
+                || pasteText.IndexOf("[DMMR-AVRIP]") == 0
+                || pasteText.IndexOf("[DMMR-IVRIP]") == 0)
+            {
+                Regex regexDate = new Regex("[12][0-9][0-9][0-9][01][0-9][0-3][0-9]");
+                if (regexDate.IsMatch(pasteText))
+                {
+                    MatchCollection mc = regexDate.Matches(pasteText);
+                    string strDate = mc[0].Value.ToString();
+
+                    string[] expectedFormat = { "yyyyMMdd" };
+                    ProductDate = System.DateTime.ParseExact(strDate,
+                                expectedFormat,
+                                System.Globalization.DateTimeFormatInfo.InvariantInfo,
+                                System.Globalization.DateTimeStyles.None);
+
+                    StrProductDate = ProductDate.ToString("yyyy/MM/dd");
+                }
+
+                Regex regexProductNumber = new Regex("^.* ");
+                int lastPos = pasteText.LastIndexOf("[");
+                string str = pasteText.Substring(lastPos+1);
+                if (regexProductNumber.IsMatch(str))
+                {
+                    MatchCollection mc = regexProductNumber.Matches(str);
+                    ProductNumber = mc[0].Value.ToString().Trim();
+                }
+
+                if (pasteText.IndexOf("[AVRIP]") == 0)
+                    Kind = 1;
+                else if (pasteText.IndexOf("[IVRIP]") == 0)
+                    Kind = 2;
+                else if (pasteText.IndexOf("[裏AVRIP]") == 0)
+                    Kind = 3;
+
+                int posFrom = pasteText.IndexOf("【");
+                int posTo = pasteText.IndexOf("】");
+                if (posFrom >= 0)
+                    Maker = pasteText.Substring(posFrom+1, (posTo - posFrom)-1);
+
+                Title = pasteText.Substring(posTo+1, (lastPos - posTo)-1).Trim();
+
+                int acPos = pasteText.Substring(lastPos).IndexOf("（");
+                if (acPos >= 0)
+                    Actresses = pasteText.Substring(lastPos).Replace("（", "").Replace("）", "");
+            }
+
+            return;
         }
     }
 }
