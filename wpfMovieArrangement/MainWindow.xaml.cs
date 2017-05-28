@@ -29,16 +29,16 @@ namespace wpfMovieArrangement
         public readonly static RoutedCommand CahngeModeFilenameGenerate = new RoutedCommand("CahngeModeFilenameGenerate", typeof(MainWindow));
         public readonly static RoutedCommand CahngeModeKoreanPorno = new RoutedCommand("CahngeModeKoreanPorno", typeof(MainWindow));
 
-        private const string REGEX_MOVIE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*png$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.mov|.*\.3gp";
-        private const string REGEX_TARGETFILE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*png$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.rar|.*\.mov|.*\.3gp";
-        private const string REGEX_MOVIEONLY_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.mov|.*\.3gp";
+        public const string REGEX_MOVIE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*png$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.mov|.*\.3gp";
+        public const string REGEX_MOVIEONLY_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.mov|.*\.3gp";
 
         private List<MovieMaker> listMakers = null;
         ICollectionView ColViewListMakers;
         private int MaxListMakers = 0;
         private List<MovieFileContents> listFilesContents = null;
-        private List<string> listTextTargetFileName = null;
         private List<MovieImportData> listImportTarget = null;
+
+        private collection.FileGeneTargetFilesCollection ColViewFileGeneTargetFiles;
 
         private List<MovieMaker> dispinfoSelectDataGridMakers = null;
         private List<KoreanPornoData> dispinfoSelectDataGridKoreanPorno = null;
@@ -48,7 +48,6 @@ namespace wpfMovieArrangement
         SettingXmlControl settingControl = null;
         Setting setting = null;
         ViewModel ViewData;
-        DateTime dispctrlAvripHistoryAccessDateTime;
         bool isSelectSameMaker = false;
 
         public int dispctrlMode = 0;
@@ -145,7 +144,6 @@ namespace wpfMovieArrangement
             MaxListMakers = listMakers.Count();
 
             dispctrlMode = MODE_NORMALMOVIE;
-
         }
 
         public void ChangeModeNormalRarExecute(object sender, RoutedEventArgs e)
@@ -178,6 +176,7 @@ namespace wpfMovieArrangement
 
             OnGridTargetDisplay(null, null);
         }
+
         public void ChangeModeDateCopyExecute(object sender, RoutedEventArgs e)
         {
             dispctrlMode = MODE_DATECOPY;
@@ -358,7 +357,10 @@ namespace wpfMovieArrangement
 
             OnGridTargetDisplay(null, null);
 
-            dgridDestFile.ItemsSource = GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
+            ColViewFileGeneTargetFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
+
+            dgridCheckExistFiles.ItemsSource = ColViewFileGeneTargetFiles.ColViewListTargetFiles;
+            dgridDestFile.ItemsSource = ColViewFileGeneTargetFiles.GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
 
             txtStatusBar.Width = statusbarMain.ActualWidth;
             txtStatusBar.Background = statusbarMain.Background;
@@ -375,38 +377,6 @@ namespace wpfMovieArrangement
 
             dispinfoKoreanPornoStorePath = txtKoreanPornoPath.Text;
             dgridKoreanPorno.ItemsSource = KoreanPorno.GetFolderData(dispinfoKoreanPornoStorePath);
-        }
-        public List<TargetFiles> GetDestFiles(string myPath, string myTargetExtention)
-        {
-            Regex regex = new Regex(myTargetExtention, RegexOptions.IgnoreCase);
-            Regex regexEdited = new Regex("^\\[AV|^\\[裏AV|^\\[IV");
-            //IEnumerable<string> files = from file in Directory.GetFiles(@"\\SANDY2500\BitTorrent\JDownloader", "*", SearchOption.AllDirectories) where regex.IsMatch(file) select file;
-
-            string[] files = Directory.GetFiles(@myPath, "*", System.IO.SearchOption.AllDirectories);
-
-            List<TargetFiles> listDestFIles = new List<TargetFiles>();
-
-            foreach (var file in files)
-            {
-                if (!regex.IsMatch(file))
-                    continue;
-
-                FileInfo fileinfo = new FileInfo(file.ToString());
-
-                if (regexEdited.IsMatch(fileinfo.Name))
-                    continue;
-
-                TargetFiles targetfiles = new TargetFiles();
-                targetfiles.FileInfo = fileinfo;
-                targetfiles.ListUpdateDate = fileinfo.LastWriteTime;
-                targetfiles.FileSize = fileinfo.Length;
-                targetfiles.DispRelativePath = fileinfo.Directory.ToString().Replace(@txtBasePath.Text + "\\", "").Replace(@txtBasePath.Text, "");
-                targetfiles.IsSelected = false;
-
-                listDestFIles.Add(targetfiles);
-            }
-
-            return listDestFIles;
         }
 
         public List<TargetFiles> GetRarFileInfo(string myPath)
@@ -687,7 +657,7 @@ namespace wpfMovieArrangement
                 fileControl.SetMovieActionInfo();
 
                 // データベースへ登録用の情報を生成する
-                fileControl.SetDbMovieFilesInfo(txtChangeTag.Text);
+                fileControl.SetDbMovieFilesInfo(dispinfoSelectMovieImportData);
 
                 DbConnection dbcon = new DbConnection();
 
@@ -827,7 +797,9 @@ namespace wpfMovieArrangement
                 if (!CanGetDirectoryInfo())
                     return;
 
-                dgridArrangementTarget.ItemsSource = GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
+                if (ColViewFileGeneTargetFiles == null)
+                    ColViewFileGeneTargetFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
+                dgridArrangementTarget.ItemsSource = ColViewFileGeneTargetFiles.GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
             }
         }
 
@@ -845,7 +817,7 @@ namespace wpfMovieArrangement
             if (!CanGetDirectoryInfo())
                 return;
 
-            dgridDestFile.ItemsSource = GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
+            dgridDestFile.ItemsSource = ColViewFileGeneTargetFiles.GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
         }
 
         private bool FilterContentsItemAndSearchFilter(object item)
@@ -1052,6 +1024,10 @@ namespace wpfMovieArrangement
 
             if (dispctrlMode == MODE_FILENAMEGENERATE)
             {
+                txtFileGeneSearchText.Text = dispinfoSelectMovieImportData.GetFilterProductNumber();
+                ColViewFileGeneTargetFiles.FilterSearchProductNumber = txtFileGeneSearchText.Text;
+                ColViewFileGeneTargetFiles.Refresh();
+
                 SetUIElementFromImportData(dispinfoSelectMovieImportData);
 
                 lgridFilenameGenerate.Visibility = System.Windows.Visibility.Visible;
@@ -1119,6 +1095,7 @@ namespace wpfMovieArrangement
                 }
                 return;
             }
+            ClearUIElement();
             txtTitleText.Text = titletext;
 
             MovieImportData importData;
@@ -1138,14 +1115,13 @@ namespace wpfMovieArrangement
                 if (importData.RarFlag == true)
                     tbtnFileGeneTextAddRar.IsChecked = true;
 
+                ColViewFileGeneTargetFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFilterProductNumber();
+                ColViewFileGeneTargetFiles.Refresh();
+
                 return;
             }
 
             txtStatusBar.Text = "";
-            if (chkKindFixed.IsChecked == null || !(bool)chkKindFixed.IsChecked) txtKind.Text = "";
-            txtMatchStr.Text = "";
-            txtMaker.Text = "";
-            txtTitle.Text = "";
 
             if (MaxListMakers > listMakers.Count())
             {
@@ -1197,61 +1173,11 @@ namespace wpfMovieArrangement
                 return;
             }
 
-            ExecuteMatchFiles();
-            txtFileGeneSearchText.Text = txtSearch.Text;
-        }
+            MovieImportData data = GetImportDataFromUIElement();
+            ColViewFileGeneTargetFiles.FilterSearchProductNumber = data.GetFilterProductNumber();
+            txtFileGeneSearchText.Text = ColViewFileGeneTargetFiles.FilterSearchProductNumber;
 
-        private void ExecuteMatchFiles()
-        {
-            List<TargetFiles> files = GetDestFiles(txtBasePath.Text, REGEX_TARGETFILE_EXTENTION);
-            dgridCheckExistFiles.ItemsSource = files;
-
-            if (txtProductNumber.Text != null && txtProductNumber.Text.Length > 0)
-            {
-                string bartext = "";
-                string searchword = "";
-                string HyphenStr = txtProductNumber.Text;
-                string HyphenWithoutStr = HyphenStr.Replace("-", "");
-
-                if (HyphenStr.Equals(HyphenWithoutStr))
-                    searchword = HyphenStr;
-                else
-                    searchword = HyphenStr + " " + HyphenWithoutStr;
-                txtSearch.Text = searchword;
-
-                dgridCheckExistFiles.Items.Filter = new Predicate<object>(FilterTargetFilesSearchFilter);
-
-            }
-        }
-
-        private bool FilterTargetFilesSearchFilter(object item)
-        {
-            TargetFiles mTarget = item as TargetFiles;
-
-            string[] arrSearchWord = txtSearch.Text.Split(' ');
-            int Count = arrSearchWord.Length;
-
-            // ファイル名のパスを含めて検索するため、基本フォルダを除いたパス付きファイル名を取得
-            string filename = mTarget.FileInfo.FullName.Replace(txtBasePath.Text, "");
-
-            int MatchCount = 0;
-            foreach (string word in arrSearchWord)
-            {
-                //if (mTarget.Name.ToUpper().IndexOf(word.ToUpper()) >= 0)
-
-                if (filename.ToUpper().IndexOf(word.ToUpper()) >= 0)
-                    MatchCount++;
-            }
-
-            // AND検索の場合
-            //if (Count <= MatchCount)
-            //    return true;
-
-            // OR検索の場合
-            if (MatchCount >= 1)
-                return true;
-
-            return false;
+            ColViewFileGeneTargetFiles.Refresh();
         }
 
         private void dgridMakers_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -1267,7 +1193,8 @@ namespace wpfMovieArrangement
 
                 isSelectSameMaker = false;
 
-                ExecuteMatchFiles();
+                ColViewFileGeneTargetFiles.FilterSearchProductNumber = (dispinfoSelectMovieImportData != null) ? dispinfoSelectMovieImportData.GetFilterProductNumber() : txtProductNumber.Text;
+                ColViewFileGeneTargetFiles.Refresh();
 
                 ButtonMakerClose(null, null);
             }
@@ -1479,7 +1406,8 @@ namespace wpfMovieArrangement
             MovieImportData movieImportData = new MovieImportData();
 
             movieImportData.CopyText = txtTitleText.Text;
-            movieImportData.Kind = Convert.ToInt32(txtKind.Text);
+            if (txtKind.Text.Length > 0)
+                movieImportData.Kind = Convert.ToInt32(txtKind.Text);
             movieImportData.MatchProduct = txtMatchStr.Text;
             movieImportData.ProductNumber = txtProductNumber.Text;
             movieImportData.StrProductDate = txtFilenameGenDate.Text;
@@ -1498,6 +1426,7 @@ namespace wpfMovieArrangement
 
         private void SetUIElementFromImportData(MovieImportData myData)
         {
+            txtbImportId.Text = Convert.ToString(myData.Id);
             txtTitleText.Text = myData.CopyText;
             txtKind.Text = myData.Kind.ToString();
             txtMatchStr.Text = myData.MatchProduct;
@@ -1506,16 +1435,18 @@ namespace wpfMovieArrangement
             txtMaker.Text = myData.Maker;
             txtTitle.Text = myData.Title;
             txtActresses.Text = myData.Actresses;
+            txtTag.Text = myData.Tag;
             tbtnFileGeneTextAddRar.IsChecked = myData.RarFlag;
             txtFilenameGenerate.Text = myData.Filename;
         }
 
         private void ClearUIElement()
         {
+            txtbImportId.Text = "";
             txtTitleText.Text = "";
-            txtKind.Text = "";
+            if (chkKindFixed.IsChecked == null || !(bool)chkKindFixed.IsChecked) txtKind.Text = "";
             txtMatchStr.Text = "";
-            txtFilenameGenDate.Text = "";
+            //txtFilenameGenDate.Text = "";
             txtProductNumber.Text = "";
             txtMaker.Text = "";
             txtTitle.Text = "";
@@ -1548,14 +1479,30 @@ namespace wpfMovieArrangement
             if (Validation.GetHasError(txtFilenameGenDate))
                 return;
 
-            MovieImportData movieImportData = GetImportDataFromUIElement();
+            string importId = txtbImportId.Text;
 
             service.MovieImportService service = new service.MovieImportService();
-            movieImportData = service.DbExport(movieImportData, new DbConnection());
+            if (importId.Length > 0)
+            {
+                MovieImportData movieImportData = GetImportDataFromUIElement();
+                movieImportData.Id = Convert.ToInt32(importId);
 
-            ClearUIElement();
+                service.DbUpdate(movieImportData, new DbConnection());
 
-            listImportTarget.Add(movieImportData);
+                //ClearUIElement();
+
+                //listImportTarget.Add(movieImportData);
+            }
+            else
+            {
+                MovieImportData movieImportData = GetImportDataFromUIElement();
+
+                movieImportData = service.DbExport(movieImportData, new DbConnection());
+
+                ClearUIElement();
+
+                listImportTarget.Add(movieImportData);
+            }
         }
 
         private void btnPasteActresses_Click(object sender, RoutedEventArgs e)
@@ -1819,8 +1766,6 @@ namespace wpfMovieArrangement
                     RecycleOption.SendToRecycleBin);
             }
 
-            ExecuteMatchFiles();
-
             btnFileGenSearch_Click(null, null);
         }
 
@@ -1828,21 +1773,8 @@ namespace wpfMovieArrangement
         {
             txtSearch.Text = txtFileGeneSearchText.Text;
 
-            dgridCheckExistFiles.Items.Filter = new Predicate<object>(FilterTargetFilesSearchFilter);
-        }
-
-        private void tbtnFileGeneTextAddRar_Click(object sender, RoutedEventArgs e)
-        {
-            ToggleButton tbutton = sender as ToggleButton;
-            if (tbutton == null)
-                return;
-
-            Regex regex = new Regex("^" + tbutton.Content, RegexOptions.IgnoreCase);
-
-            if (regex.IsMatch(txtFilenameGenerate.Text))
-                return;
-
-            txtFilenameGenerate.Text = tbutton.Content + " " + txtFilenameGenerate.Text;
+            ColViewFileGeneTargetFiles.FilterSearchProductNumber = txtSearch.Text;
+            ColViewFileGeneTargetFiles.Refresh();
         }
     }
 }

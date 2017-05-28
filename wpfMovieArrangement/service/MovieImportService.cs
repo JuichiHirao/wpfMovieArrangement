@@ -85,6 +85,91 @@ namespace wpfMovieArrangement.service
             return data;
         }
 
+        public void DbUpdate(MovieImportData myData, DbConnection myDbCon)
+        {
+            DbConnection dbcon;
+            string sqlcmd = "";
+
+            // 引数にコネクションが指定されていた場合は指定されたコネクションを使用
+            if (myDbCon != null)
+                dbcon = myDbCon;
+            else
+                dbcon = new DbConnection();
+
+            sqlcmd = "UPDATE MOVIE_IMPORT ";
+            sqlcmd += "SET COPY_TEXT = @CopyText";
+            sqlcmd += ", KIND = @Kind";
+            sqlcmd += ", MATCH_PRODUCT = @MatchProduct";
+            sqlcmd += ", PRODUCT_NUMBER = @ProductNumber";
+            sqlcmd += ", PRODUCT_DATE = @ProductDate";
+            sqlcmd += ", MAKER = @Maker ";
+            sqlcmd += ", TITLE = @Title ";
+            sqlcmd += ", ACTRESSES = @Actresses ";
+            sqlcmd += ", RAR_FLAG = @RarFlag ";
+            sqlcmd += ", TAG = @Tag ";
+            sqlcmd += ", FILENAME = @Filename ";
+            sqlcmd += "WHERE ID = @Id ";
+
+            SqlCommand scmd = new SqlCommand(sqlcmd, dbcon.getSqlConnection());
+            DataTable dtSaraly = new DataTable();
+
+            List<SqlParameter> listSqlParams = new List<SqlParameter>();
+
+            SqlParameter sqlparam = new SqlParameter("@CopyText", SqlDbType.VarChar);
+            sqlparam.Value = myData.CopyText;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Kind", SqlDbType.Int);
+            sqlparam.Value = myData.Kind;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@MatchProduct", SqlDbType.VarChar);
+            sqlparam.Value = myData.MatchProduct;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@ProductNumber", SqlDbType.VarChar);
+            sqlparam.Value = myData.ProductNumber;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@ProductDate", SqlDbType.DateTime);
+            sqlparam.Value = myData.ProductDate;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Maker", SqlDbType.VarChar);
+            sqlparam.Value = myData.Maker;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Title", SqlDbType.VarChar);
+            sqlparam.Value = myData.Title;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Actresses", SqlDbType.VarChar);
+            sqlparam.Value = myData.Actresses;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@RarFlag", SqlDbType.Int);
+            sqlparam.Value = myData.RarFlag;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Tag", SqlDbType.VarChar);
+            sqlparam.Value = myData.Tag;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Filename", SqlDbType.VarChar);
+            sqlparam.Value = myData.Filename;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Id", SqlDbType.Int);
+            sqlparam.Value = myData.Id;
+            listSqlParams.Add(sqlparam);
+
+            dbcon.SetParameter(listSqlParams.ToArray());
+
+            dbcon.execSqlCommand(sqlcmd);
+
+            return;
+        }
+
         public void DbDelete(MovieImportData myData, DbConnection myDbCon)
         {
             DbConnection dbcon;

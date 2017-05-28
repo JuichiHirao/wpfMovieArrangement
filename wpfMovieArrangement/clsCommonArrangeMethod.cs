@@ -225,7 +225,7 @@ namespace wpfMovieArrangement
                 }
             }
         }
-        public void SetDbMovieFilesInfo(string myTag)
+        public void SetDbMovieFilesInfo(MovieImportData myImportData)
         {
             DatabaseMovieFile = new MovieFileContents();
 
@@ -270,9 +270,11 @@ namespace wpfMovieArrangement
                 }
             }
             // 品番、販売日を設定
-            DatabaseMovieFile.Parse();
+            //DatabaseMovieFile.Parse();
+            DatabaseMovieFile.SellDate = myImportData.ProductDate;
+            DatabaseMovieFile.ProductNumber = myImportData.ProductNumber;
 
-            DatabaseMovieFile.Tag = myTag;
+            DatabaseMovieFile.Tag = myImportData.Tag;
         }
 
         public void Execute()

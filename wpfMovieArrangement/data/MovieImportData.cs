@@ -108,6 +108,24 @@ namespace wpfMovieArrangement
 
         }
 
+        public string GetFilterProductNumber()
+        {
+            string searchText = "";
+
+            if (ProductNumber != null && ProductNumber.Length > 0)
+            {
+                string HyphenStr = ProductNumber;
+                string HyphenWithoutStr = HyphenStr.Replace("-", "");
+
+                if (HyphenStr.Equals(HyphenWithoutStr))
+                    searchText = HyphenStr;
+                else
+                    searchText = HyphenStr + " " + HyphenWithoutStr;
+            }
+
+            return searchText;
+        }
+
         public MovieImportData(string myPasteText)
         {
             string pasteText = "";

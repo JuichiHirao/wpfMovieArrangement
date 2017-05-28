@@ -244,6 +244,12 @@
                 </Grid.ColumnDefinitions>
                 <Button Name="btnPasteTitleText" Content="貼付" Margin="5,3,5,3" Click="btnPasteTitleText_Click" />
                 <TextBox Name="txtTitleText" Margin="5,3,5,3" FontSize="18" Grid.Column="1" TextWrapping="Wrap" />
+                <WrapPanel Orientation="Horizontal" Grid.Row="1" Height="40">
+                    <TextBlock Text="ImpId" Margin="5,5,5,5" FontSize="16" />
+                    <TextBlock Name="txtbImportId" Margin="5,5,5,5" FontSize="24" />
+                    <TextBlock Text="FilesId" Margin="5,5,5,5" FontSize="16" />
+                    <TextBlock Name="txtbFilesId" Margin="5,5,5,5" FontSize="24" />
+                </WrapPanel>
             </Grid>
             <Grid Grid.Row="1">
                 <Grid.Resources>
@@ -315,7 +321,7 @@
                         <CheckBox Name="chkActressFixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
                         <Button Name="btnClearActress" Content="クリア" Click="btnClearActress_Click" />
                     </WrapPanel>
-                    <ToggleButton Name="tbtnFileGeneTextAddRar" Content="RAR" Width="60" HorizontalAlignment="Right" Click="tbtnFileGeneTextAddRar_Click" />
+                    <ToggleButton Name="tbtnFileGeneTextAddRar" Content="RAR" Width="60" HorizontalAlignment="Right" />
                 </Grid>
                 <Grid Grid.Row="6">
                     <Grid.ColumnDefinitions>
