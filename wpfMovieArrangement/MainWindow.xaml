@@ -126,7 +126,7 @@
                 </TextBox>
             </Grid>
             <Grid Name="lgridDateCopySource" Margin="15,3,15,3" Visibility="Collapsed" Grid.Row="1">
-                <Button Name="btnPasteSource" Content="日付コピー元貼付" Margin="5,0,5,0" Click="btnPasteSource_Click" />
+                <Button Name="btnDateCopyPasteSource" Content="日付コピー元貼付" Margin="5,0,5,0" Click="btnDateCopyPasteSource_Click" />
             </Grid>
             <WrapPanel Name="wpanelNormal" Margin="5,6,5,4" Grid.Row="1">
                 <TextBox Name="txtSearch" Width="300" />
@@ -167,7 +167,6 @@
                 <TextBox Name="txtChangeFileName" Width="Auto" Height="30" Margin="5,5,5,5" MouseDoubleClick="txtChangeFileName_MouseDoubleClick" />
                 <TextBox Name="txtChangeTag" Width="Auto" Height="30" Margin="5,5,5,5" Grid.Row="1" />
             </Grid>
-            <!--<Button Name="btnAllSelect" Content="全選択" Width="60" Margin="5,0,5,0" Click="btnAllSelect_Click" HorizontalAlignment="Right" Grid.Row="3"/>-->
             <DataGrid Name="dgridDestFile" Width="Auto" FontSize="16" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Grid.Row="5" MouseDoubleClick="dgridDestFile_MouseDoubleClick">
                 <DataGrid.ContextMenu>
                     <ContextMenu>

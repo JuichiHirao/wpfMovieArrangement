@@ -57,6 +57,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="collection\FileGeneTargetFilesCollection.cs" />
+    <Compile Include="service\DateCopyService.cs" />
+    <Compile Include="service\FilesRegisterService.cs" />
     <Compile Include="service\MovieImportService.cs" />
     <Page Include="assets\Theme.xaml">
       <Generator>MSBuild:Compile</Generator>

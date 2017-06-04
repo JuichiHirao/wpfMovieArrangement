@@ -29,9 +29,6 @@ namespace wpfMovieArrangement
         public readonly static RoutedCommand CahngeModeFilenameGenerate = new RoutedCommand("CahngeModeFilenameGenerate", typeof(MainWindow));
         public readonly static RoutedCommand CahngeModeKoreanPorno = new RoutedCommand("CahngeModeKoreanPorno", typeof(MainWindow));
 
-        public const string REGEX_MOVIE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*png$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.mov|.*\.3gp";
-        public const string REGEX_MOVIEONLY_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.mov|.*\.3gp";
-
         private List<MovieMaker> listMakers = null;
         ICollectionView ColViewListMakers;
         private int MaxListMakers = 0;
@@ -39,11 +36,15 @@ namespace wpfMovieArrangement
         private List<MovieImportData> listImportTarget = null;
 
         private collection.FileGeneTargetFilesCollection ColViewFileGeneTargetFiles;
+        private collection.FileGeneTargetFilesCollection ColViewArrangementTarget; // dgridArrangementTarget
+        private collection.FileGeneTargetFilesCollection ColViewDestFiles; // dgridDestFile
 
         private List<MovieMaker> dispinfoSelectDataGridMakers = null;
         private List<KoreanPornoData> dispinfoSelectDataGridKoreanPorno = null;
         private string dispinfoKoreanPornoStorePath = null;
         private MovieImportData dispinfoSelectMovieImportData= null;
+        // 日付コピー時には各DataGridがColViewではなくなるので、戻すためのフラグ
+        private bool dispinfoIsDateCopyPasteExecute = false;
 
         SettingXmlControl settingControl = null;
         Setting setting = null;
@@ -146,9 +147,70 @@ namespace wpfMovieArrangement
             dispctrlMode = MODE_NORMALMOVIE;
         }
 
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            settingControl = new SettingXmlControl();
+            setting = settingControl.GetData();
+
+            if (setting.BasePath == null)
+            {
+                MessageBox.Show("SETTING.xmlが存在しないか、BasePathが設定されていません");
+                return;
+            }
+            txtBasePath.Text = setting.BasePath;
+            txtLabelPath.Text = setting.LabelPath;
+            txtKoreanPornoPath.Text = setting.KoreanPornoPath;
+            txtFilenameGenDate.Text = "";
+
+            ChangeModeNormalMovieExecute(null, null);
+
+            OnGridTargetDisplay(null, null);
+
+            ColViewFileGeneTargetFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
+            ColViewArrangementTarget = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
+            ColViewDestFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
+
+            dgridCheckExistFiles.ItemsSource = ColViewFileGeneTargetFiles.ColViewListTargetFiles;
+            dgridArrangementTarget.ItemsSource = ColViewArrangementTarget.ColViewListTargetFiles;
+            dgridDestFile.ItemsSource = ColViewDestFiles.ColViewListTargetFiles;
+
+            txtStatusBar.Width = statusbarMain.ActualWidth;
+            txtStatusBar.Background = statusbarMain.Background;
+
+            dgridSelectTargetFilename.Width = statusbarMain.ActualWidth;
+            service.MovieImportService service = new service.MovieImportService();
+            listImportTarget = service.GetList(new DbConnection());
+
+            MovieFileContentsParent parent = new MovieFileContentsParent();
+            listFilesContents = parent.GetDbContents();
+
+            DbConnection localDbCon = new DbConnection();
+            txtbDbNowDate.Text = localDbCon.getDateStringSql("SELECT GETDATE()");
+
+            dispinfoKoreanPornoStorePath = txtKoreanPornoPath.Text;
+            dgridKoreanPorno.ItemsSource = KoreanPorno.GetFolderData(dispinfoKoreanPornoStorePath);
+        }
+
+        /// <summary>
+        /// 日付コピーを実行するとDataGridがColViewではなくなるので、日付コピーが終了した後は
+        /// DataGridへの紐付けをColViewへ戻す
+        /// </summary>
+        private void OnModeChangeDataGrid()
+        {
+            if (dispinfoIsDateCopyPasteExecute)
+            {
+                dgridArrangementTarget.ItemsSource = ColViewArrangementTarget.ColViewListTargetFiles;
+                dgridDestFile.ItemsSource = ColViewDestFiles.ColViewListTargetFiles;
+
+                dispinfoIsDateCopyPasteExecute = false;
+            }
+        }
+
         public void ChangeModeNormalRarExecute(object sender, RoutedEventArgs e)
         {
             dispctrlMode = MODE_NORMALRAR;
+
+            OnModeChangeDataGrid();
 
             ChangeModeNormal(null, null);
         }
@@ -156,6 +218,8 @@ namespace wpfMovieArrangement
         public void ChangeModeNormalMovieExecute(object sender, RoutedEventArgs e)
         {
             dispctrlMode = MODE_NORMALMOVIE;
+
+            OnModeChangeDataGrid();
 
             ChangeModeNormal(null, null);
         }
@@ -191,13 +255,16 @@ namespace wpfMovieArrangement
 
             lgridFilenameGenerate.Visibility = System.Windows.Visibility.Collapsed;
 
-            dgridArrangementTarget.ItemsSource = null;
-            dgridDestFile.ItemsSource = null;
+            ColViewArrangementTarget.Clear();
+            ColViewDestFiles.Clear();
+            //dgridDestFile.ItemsSource = null;
         }
 
         public void CahngeModeFilenameGenerateExecute(object sender, RoutedEventArgs e)
         {
             dispctrlMode = MODE_FILENAMEGENERATE;
+
+            OnModeChangeDataGrid();
 
             lgridMain.Visibility = System.Windows.Visibility.Collapsed;
             wpanelNormal.Visibility = System.Windows.Visibility.Collapsed;
@@ -216,6 +283,8 @@ namespace wpfMovieArrangement
         {
             dispctrlMode = MODE_KOREANPORNO;
 
+            OnModeChangeDataGrid();
+
             lgridMain.Visibility = System.Windows.Visibility.Collapsed;
             wpanelNormal.Visibility = System.Windows.Visibility.Collapsed;
             lgridNormalChangeFilename.Visibility = System.Windows.Visibility.Collapsed;
@@ -228,14 +297,16 @@ namespace wpfMovieArrangement
             lgridKoreanPornoArrange.Visibility = System.Windows.Visibility.Visible;
         }
 
-        private void btnPasteSource_Click(object sender, RoutedEventArgs e)
+        private void btnDateCopyPasteSource_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.IDataObject data = Clipboard.GetDataObject();
 
             List<TargetFiles> files = GetClipbardFiles(data);
 
-            if (files.Count > 0 && dgridArrangementTarget.ItemsSource == null)
+            if (files.Count > 0)
                 dgridArrangementTarget.ItemsSource = files;
+
+            dispinfoIsDateCopyPasteExecute = true;
 
             return;
         }
@@ -246,8 +317,10 @@ namespace wpfMovieArrangement
 
             List<TargetFiles> files = GetClipbardFiles(data);
 
-            if (files.Count > 0 && dgridArrangementTarget.ItemsSource != null)
+            if (files.Count > 0)
                 dgridDestFile.ItemsSource = files;
+
+            dispinfoIsDateCopyPasteExecute = true;
 
             return;
         }
@@ -336,124 +409,6 @@ namespace wpfMovieArrangement
 
             return true;
 
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            settingControl = new SettingXmlControl();
-            setting = settingControl.GetData();
-
-            if (setting.BasePath == null)
-            {
-                MessageBox.Show("SETTING.xmlが存在しないか、BasePathが設定されていません");
-                return;
-            }
-            txtBasePath.Text = setting.BasePath;
-            txtLabelPath.Text = setting.LabelPath;
-            txtKoreanPornoPath.Text = setting.KoreanPornoPath;
-            txtFilenameGenDate.Text = "";
-
-            ChangeModeNormalMovieExecute(null, null);
-
-            OnGridTargetDisplay(null, null);
-
-            ColViewFileGeneTargetFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
-
-            dgridCheckExistFiles.ItemsSource = ColViewFileGeneTargetFiles.ColViewListTargetFiles;
-            dgridDestFile.ItemsSource = ColViewFileGeneTargetFiles.GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
-
-            txtStatusBar.Width = statusbarMain.ActualWidth;
-            txtStatusBar.Background = statusbarMain.Background;
-
-            dgridSelectTargetFilename.Width = statusbarMain.ActualWidth;
-            service.MovieImportService service = new service.MovieImportService();
-            listImportTarget = service.GetList(new DbConnection());
-
-            MovieFileContentsParent parent = new MovieFileContentsParent();
-            listFilesContents = parent.GetDbContents();
-
-            DbConnection localDbCon = new DbConnection();
-            txtbDbNowDate.Text = localDbCon.getDateStringSql("SELECT GETDATE()");
-
-            dispinfoKoreanPornoStorePath = txtKoreanPornoPath.Text;
-            dgridKoreanPorno.ItemsSource = KoreanPorno.GetFolderData(dispinfoKoreanPornoStorePath);
-        }
-
-        public List<TargetFiles> GetRarFileInfo(string myPath)
-        {
-            if (myPath == null)
-                return null;
-
-            FileInfo fileinfoMain = new FileInfo(myPath);
-
-            List<TargetFiles> listTargetFiles = new List<TargetFiles>();
-            string[] arrTargetRarFiles = null;
-
-            try
-            {
-                arrTargetRarFiles = Directory.GetFiles(myPath, "*rar", System.IO.SearchOption.TopDirectoryOnly);
-            }
-            catch (ArgumentException)
-            {
-                return null;
-            }
-            catch (DirectoryNotFoundException)
-            {
-                //Directory.CreateDirectory(myPath);
-                return null;
-            }
-
-            List<FileInfo> SameFiles = new List<FileInfo>();
-
-            var SortedRarFiles = from rarfile in arrTargetRarFiles
-                                 orderby rarfile ascending
-                                 select rarfile;
-
-            foreach (string rarfile in SortedRarFiles)
-            {
-                FileInfo fileinfo = new FileInfo(rarfile);
-
-                bool IsSame = false;
-                foreach (FileInfo SameFile in SameFiles)
-                {
-                    if (SameFile.Name.Equals(fileinfo.Name))
-                    {
-                        IsSame = true;
-                        break;
-                    }
-                }
-
-                if (IsSame)
-                    continue;
-
-                Regex regex = new Regex("part.[0-9]*");
-                Match match = regex.Match(fileinfo.Name);
-
-                int FileCount = 0;
-                string PatternMatchStr = "";
-                string[] MatchFiles = null;
-                if (match.Success)
-                {
-                    PatternMatchStr = Regex.Replace(fileinfo.Name, "part.[0-9]*", "*");
-
-                    MatchFiles = Directory.GetFiles(myPath, PatternMatchStr, System.IO.SearchOption.TopDirectoryOnly);
-                    FileCount = MatchFiles.Length;
-
-                    for (int IdxArr = 0; IdxArr < MatchFiles.Length; IdxArr++)
-                        SameFiles.Add(new FileInfo(MatchFiles[IdxArr]));
-                }
-
-                TargetFiles file = new TargetFiles();
-                file.FileInfo = fileinfo;
-                file.ListUpdateDate = fileinfo.LastWriteTime;
-                file.FileCount = FileCount;
-                file.PatternMatch = PatternMatchStr;
-                file.MatchFiles = MatchFiles;
-
-                listTargetFiles.Add(file);
-            }
-
-            return listTargetFiles;
         }
 
         private void OnDataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -549,72 +504,23 @@ namespace wpfMovieArrangement
         {
             if (dispctrlMode == MODE_DATECOPY)
             {
-                List<TargetFiles> listTarget = (List<TargetFiles>)dgridArrangementTarget.ItemsSource;
-                TargetFiles srcfile = null;
-
-                if (listTarget == null)
-                {
-                    MessageBox.Show("コピー元のファイルが存在しません");
-                    return;
-                }
-                if (listTarget.Count > 1)
-                {
-                    List<TargetFiles> listSelTarget = (List<TargetFiles>)dgridArrangementTarget.SelectedItems;
-
-                    if (listSelTarget != null && listSelTarget.Count > 1)
-                    {
-                        MessageBox.Show("複数存在するので、上のファイル名からコピー元を選択して下さい");
-                        return;
-                    }
-                    srcfile = listSelTarget[0];
-                }
-                else if (listTarget.Count <= 0)
-                {
-                    if (listTarget.Count != 1)
-                    {
-                        MessageBox.Show("コピー元のファイルが存在しません");
-                        return;
-                    }
-
-                    return;
-                }
-                srcfile = listTarget[0];
-
-                List<TargetFiles> listDestFiles = (List<TargetFiles>)dgridDestFile.ItemsSource;
-
-                if (listDestFiles == null || listDestFiles.Count <= 0)
-                {
-                    MessageBox.Show("コピー先のファイルが存在しません");
-                    return;
-                }
+                DateCopyService serviceDataCopy = new DateCopyService();
 
                 string message = "";
-                foreach (TargetFiles dest in listDestFiles)
+                try
                 {
-                    bool isFinished = false;
-                    while (isFinished == false)
-                    {
-                        try
-                        {
-                            dest.FileInfo.LastWriteTime = srcfile.ListUpdateDate;
-                            isFinished = true;
-                        }
-                        catch (UnauthorizedAccessException)
-                        {
-                            MessageBoxResult res = MessageBox.Show("ファイルの読取専用を外して下さい、再実行しますか？", "", MessageBoxButton.YesNo);
+                    serviceDataCopy.SetSourceFile(dgridArrangementTarget);
+                    serviceDataCopy.SetDestFile(dgridDestFile);
 
-                            if (res == MessageBoxResult.No)
-                                break;
-                        }
-                    }
-
-                    if (isFinished)
-                        message += dest.Name + "を" + srcfile.ListUpdateDate.ToString("yyyy/MM/dd HH:mm:ss") + "に変更しました\n";
+                    message = serviceDataCopy.Execute();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return;
                 }
 
                 txtStatusBar.Text = message;
-                dgridArrangementTarget.ItemsSource = null;
-                dgridDestFile.ItemsSource = null;
 
                 return;
             }
@@ -627,63 +533,44 @@ namespace wpfMovieArrangement
                 return;
             }
 
-            // 元のファイル情報を取得
-            TargetFiles srcfiles = (TargetFiles)dgridArrangementTarget.SelectedItem;
-
-            if (srcfiles == null)
-            {
-                MessageBox.Show("上のファイル名からコピー元を選択して下さい");
-                return;
-            }
-
+            FilesRegisterService service = new FilesRegisterService(new DbConnection());
             FileControl fileControl = new FileControl();
 
-            fileControl.BasePath = txtBasePath.Text;
-            fileControl.DestFilename = txtChangeFileName.Text;
-            fileControl.LabelPath = txtLabelPath.Text;
-            fileControl.SourceFile = srcfiles.FileInfo;
+            if (!txtChangeFileName.Text.Equals(dispinfoSelectMovieImportData.Filename))
+            {
+                MessageBoxResult result = MessageBox.Show("ファイル名が変更されていますが宜しいですか？", "変更確認", MessageBoxButton.OKCancel);
 
-            List<TargetFiles> listTargetFiles = (List<TargetFiles>)dgridDestFile.ItemsSource;
+                if (result == MessageBoxResult.Cancel)
+                    return;
+            }
+            dispinfoSelectMovieImportData.Filename = txtChangeFileName.Text;
 
             try
             {
+                DateCopyService.CheckDataGridSelectItem(dgridArrangementTarget, "上のファイル", 1);
+
+                service.BasePath = txtBasePath.Text;
+                service.DestFilename = txtChangeFileName.Text;
+                service.LabelPath = txtLabelPath.Text;
+
+                service.SetSourceFile(dgridArrangementTarget);
+
                 // 選択したファイルのみを対象に内部プロパティへ設定
-                fileControl.SetSelectedOnlyFiles(listTargetFiles);
+                service.SetSelectedOnlyFiles(ColViewDestFiles.listTargetFiles);
 
                 // JPEGの変換用の情報を生成する（日付コピー等はまだ実行されない）
-                fileControl.SetJpegActionInfo();
+                service.SetJpegActionInfo();
 
                 // 動画の変換用の情報を生成する（日付コピー等はまだ実行されない）
-                fileControl.SetMovieActionInfo();
+                service.SetMovieActionInfo();
 
                 // データベースへ登録用の情報を生成する
-                fileControl.SetDbMovieFilesInfo(dispinfoSelectMovieImportData);
+                service.SetDbMovieFilesInfo(dispinfoSelectMovieImportData);
 
-                DbConnection dbcon = new DbConnection();
-
-                try
-                {
-                    dbcon.BeginTransaction("MOVIE_REGISTER");
-
-                    // データベースへ登録
-                    fileControl.DatabaseExport(dbcon);
-
-                    // MOVIE_IMPORTから削除
-                    MovieImportService service = new MovieImportService();
-                    service.DbDelete(dispinfoSelectMovieImportData, dbcon);
-
-                    dbcon.CommitTransaction();
-                }
-                catch (Exception ex)
-                {
-                    Debug.Write(ex);
-                    dbcon.RollbackTransaction();
-                    MessageBox.Show(ex.Message);
-                    return;
-                }
+                service.DbExport();
 
                 // 動画、画像ファイルの移動、日付コピー等の実行
-                fileControl.Execute();
+                service.Execute();
             }
             catch (Exception exp)
             {
@@ -699,61 +586,16 @@ namespace wpfMovieArrangement
 
                 // フィルターをクリアしないと再取得した直後に動作して不要なチェックが付いてしまう
                 dgridDestFile.Items.Filter = null;
-                dgridDestFile.Items.Filter = null;
             }
 
-            // RARファイルの場合は一式を削除
-            if (menuitemRarFiles.IsChecked)
+            try
             {
-                // ネットワーク経由のパスの場合はゴミ箱でなく「DELETE」フォルダに移動
-                if (txtBasePath.Text.IndexOf("\\") == 0)
-                {
-                    string DeleteDir = System.IO.Path.Combine(txtBasePath.Text, "DELETE");
-
-                    if (!System.IO.File.Exists(DeleteDir))
-                        System.IO.Directory.CreateDirectory(DeleteDir);
-
-                    // ソースファイルのパターンマッチする全ファイルをゴミ箱に移動
-                    Debug.Print("Source Name [" + srcfiles.Name + "] --> [" + DeleteDir + "]");
-                    string[] MatchFiles = srcfiles.MatchFiles;
-
-                    if (MatchFiles != null)
-                    {
-                        foreach (string file in MatchFiles)
-                        {
-                            Debug.Print("DELETEフォルダ移動 [" + file + "]");
-                            string DestPathname = System.IO.Path.Combine(DeleteDir, new FileInfo(file).Name);
-
-                            System.IO.File.Move(file, DestPathname);
-                            //FileSystem.DeleteFile(
-                            //    file,
-                            //    UIOption.OnlyErrorDialogs,
-                            //    RecycleOption.SendToRecycleBin);
-                        }
-                    }
-                }
-                else
-                {
-                    // ソースファイルのパターンマッチする全ファイルをゴミ箱に移動
-                    Debug.Print("Source Name [" + srcfiles.Name + "]");
-                    string[] MatchFiles = srcfiles.MatchFiles;
-
-                    if (MatchFiles != null)
-                    {
-                        foreach (string file in MatchFiles)
-                        {
-                            Debug.Print("ゴミ箱移動 [" + file + "]");
-
-                            FileSystem.DeleteFile(
-                                file,
-                                UIOption.OnlyErrorDialogs,
-                                RecycleOption.SendToRecycleBin);
-                        }
-                    }
-                }
+                service.DeleteFiles();
             }
-
-            Window_Loaded(null, null);
+            catch(Exception ex)
+            {
+                MessageBox.Show("削除失敗 " + ex.Message);
+            }
 
             txtChangeFileName.Text = "";
             txtChangeTag.Text = "";
@@ -783,11 +625,17 @@ namespace wpfMovieArrangement
                     dispctrlMode = MODE_NORMALMOVIE;
             }
 
+            string searchStr = (dispinfoSelectMovieImportData != null) ? dispinfoSelectMovieImportData.GetFileSearchString() : "";
             if (dispctrlMode == MODE_NORMALRAR)
             {
                 menuitemRarFiles.IsChecked = true;
                 menuitemMovieFiles.IsChecked = false;
-                dgridArrangementTarget.ItemsSource = GetRarFileInfo(@txtBasePath.Text);
+
+                if (ColViewArrangementTarget != null)
+                {
+                    ColViewArrangementTarget.FilterSearchProductNumber = searchStr;
+                    ColViewArrangementTarget.RefreshRarFile();
+                }
             }
             else
             {
@@ -797,9 +645,16 @@ namespace wpfMovieArrangement
                 if (!CanGetDirectoryInfo())
                     return;
 
-                if (ColViewFileGeneTargetFiles == null)
-                    ColViewFileGeneTargetFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
-                dgridArrangementTarget.ItemsSource = ColViewFileGeneTargetFiles.GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
+                if (ColViewArrangementTarget != null)
+                {
+                    ColViewArrangementTarget.FilterSearchProductNumber = searchStr;
+                    ColViewArrangementTarget.Refresh(collection.FileGeneTargetFilesCollection.REGEX_MOVIE_EXTENTION);
+                }
+            }
+            if (ColViewArrangementTarget != null)
+            {
+                ColViewDestFiles.FilterSearchProductNumber = searchStr;
+                ColViewDestFiles.Refresh(collection.FileGeneTargetFilesCollection.REGEX_MOVIE_EXTENTION);
             }
         }
 
@@ -817,68 +672,17 @@ namespace wpfMovieArrangement
             if (!CanGetDirectoryInfo())
                 return;
 
-            dgridDestFile.ItemsSource = ColViewFileGeneTargetFiles.GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
-        }
-
-        private bool FilterContentsItemAndSearchFilter(object item)
-        {
-            TargetFiles mTarget = item as TargetFiles;
-
-            string[] arrSearchWord = txtSearch.Text.Split(' ');
-            int Count = arrSearchWord.Length;
-
-            // ファイル名のパスを含めて検索するため、基本フォルダを除いたパス付きファイル名を取得
-            string filename = mTarget.FileInfo.FullName.Replace(txtBasePath.Text, "");
-
-            int MatchCount = 0;
-            foreach (string word in arrSearchWord)
-            {
-                if (word.Length <= 0)
-                    continue;
-
-                if (filename.ToUpper().IndexOf(word.ToUpper()) >= 0)
-                    MatchCount++;
-            }
-
-            // AND検索の場合
-            //if (Count <= MatchCount)
-            //    return true;
-
-            // OR検索の場合
-            if (MatchCount >= 1)
-            {
-                mTarget.IsSelected = true;
-                return true;
-            }
-
-            return false;
+            ColViewDestFiles.Refresh();
+            //dgridDestFile.ItemsSource = ColViewFileGeneTargetFiles.GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
         }
 
         private void btnSearch_Click(object sender, RoutedEventArgs e)
         {
-            dgridArrangementTarget.Items.Filter = new Predicate<object>(FilterContentsItemAndSearchFilter);
+            ColViewArrangementTarget.FilterSearchProductNumber = txtSearch.Text;
+            ColViewArrangementTarget.Refresh();
+            ColViewDestFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFileSearchString();
+            ColViewDestFiles.Refresh();
 
-            List<TargetFiles> files = (List<TargetFiles>)dgridArrangementTarget.ItemsSource;
-
-            Regex regex = new Regex(REGEX_MOVIEONLY_EXTENTION, RegexOptions.IgnoreCase);
-
-            dgridArrangementTarget.SelectedItem = null;
-            TargetFiles selFile = null;
-            foreach(TargetFiles file in files)
-            {
-                if (file.IsSelected)
-                {
-                    if (regex.IsMatch(file.Name))
-                    {
-                        selFile = file;
-                        break;
-                    }
-                }
-            }
-            if (selFile != null)
-                dgridArrangementTarget.SelectedItem = selFile;
-
-            dgridDestFile.Items.Filter = new Predicate<object>(FilterContentsItemAndSearchFilter);
             btnExecuteNameChange.Focus();
 
             // MovieFileContentsからの二重登録防止のための検索は以下の順番で行う
@@ -1025,6 +829,7 @@ namespace wpfMovieArrangement
             if (dispctrlMode == MODE_FILENAMEGENERATE)
             {
                 txtFileGeneSearchText.Text = dispinfoSelectMovieImportData.GetFilterProductNumber();
+
                 ColViewFileGeneTargetFiles.FilterSearchProductNumber = txtFileGeneSearchText.Text;
                 ColViewFileGeneTargetFiles.Refresh();
 
@@ -1034,6 +839,11 @@ namespace wpfMovieArrangement
             }
             else
             {
+                txtSearch.Text = dispinfoSelectMovieImportData.GetFileSearchString();
+
+                txtbSourceFilename.Text = dispinfoSelectMovieImportData.Filename;
+                txtChangeFileName.Text = dispinfoSelectMovieImportData.Filename;
+
                 if ((bool)dispinfoSelectMovieImportData.RarFlag)
                 {
                     ChangeModeNormalRarExecute(null, null);
@@ -1041,14 +851,26 @@ namespace wpfMovieArrangement
                     foreach (TargetFiles file in dgridDestFile.ItemsSource)
                         file.IsSelected = false;
                 }
+                else
+                {
+                    ChangeModeNormalMovieExecute(null, null);
+                }
 
-                txtSearch.Text = dispinfoSelectMovieImportData.GetFileSearchString();
-
-                txtbSourceFilename.Text = dispinfoSelectMovieImportData.Filename;
-                txtChangeFileName.Text = dispinfoSelectMovieImportData.Filename;
-
-                btnSearch_Click(null, null);
                 lgridMain.Visibility = System.Windows.Visibility.Visible;
+
+                dgridArrangementTarget.SelectedItem = ColViewArrangementTarget.GetSelectTargetMovieFile();
+
+                List<TargetFiles> filesList = ColViewArrangementTarget.GetSelectTargetFiles();
+                foreach (TargetFiles file in filesList)
+                {
+                    foreach (TargetFiles item in dgridDestFile.ItemsSource)
+                    {
+                        if (file.Name.Equals(item.Name))
+                            item.IsSelected = true;
+                    }
+                }
+
+                btnExecuteNameChange.Focus();
             }
             txtbTargetImportId.Text = Convert.ToString(dispinfoSelectMovieImportData.Id);
 
@@ -1068,14 +890,6 @@ namespace wpfMovieArrangement
         private void Window_Closed_1(object sender, EventArgs e)
         {
             settingControl.Save(txtBasePath.Text, txtLabelPath.Text, txtKoreanPornoPath.Text);
-        }
-
-        private void btnAllSelect_Click(object sender, RoutedEventArgs e)
-        {
-            List<TargetFiles> listTargetFiles = (List<TargetFiles>)dgridDestFile.ItemsSource;
-
-            foreach (TargetFiles file in listTargetFiles)
-                file.IsSelected = true;
         }
 
         private void btnPasteTitleText_Click(object sender, RoutedEventArgs e)
