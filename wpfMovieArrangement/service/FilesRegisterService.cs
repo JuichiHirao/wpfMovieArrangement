@@ -249,24 +249,26 @@ namespace wpfMovieArrangement.service
             }
         }
 
-        public void DeleteFiles()
+        public void DeleteFiles(List<TargetFiles> myListTargetFiles)
         {
             if (targetImportData.RarFlag == true)
             {
+                // ソースファイルのパターンマッチする全ファイルをゴミ箱に移動
+                string patternStr = SourceFile.FileInfo.Name.Replace("part1", "part*");
+                string[] MatchFiles = Directory.GetFiles(BasePath, patternStr, System.IO.SearchOption.TopDirectoryOnly);
+
                 // ネットワーク経由のパスの場合はゴミ箱でなく「DELETE」フォルダに移動
                 if (BasePath.IndexOf("\\") == 0)
                 {
-                    string DeleteDir = System.IO.Path.Combine(BasePath, "DELETE");
-
-                    if (!System.IO.File.Exists(DeleteDir))
-                        System.IO.Directory.CreateDirectory(DeleteDir);
-
-                    // ソースファイルのパターンマッチする全ファイルをゴミ箱に移動
-                    Debug.Print("Source Name [" + SourceFile.Name + "] --> [" + DeleteDir + "]");
-                    string[] MatchFiles = SourceFile.MatchFiles;
-
                     if (MatchFiles != null)
                     {
+                        string DeleteDir = System.IO.Path.Combine(BasePath, "DELETE");
+
+                        if (!System.IO.File.Exists(DeleteDir))
+                            System.IO.Directory.CreateDirectory(DeleteDir);
+
+                        Debug.Print("Source Name [" + SourceFile.Name + "] --> [" + DeleteDir + "]");
+
                         foreach (string file in MatchFiles)
                         {
                             Debug.Print("DELETEフォルダ移動 [" + file + "]");
@@ -280,24 +282,35 @@ namespace wpfMovieArrangement.service
                         }
                     }
                 }
-            }
-            else
-            {
-                // ソースファイルのパターンマッチする全ファイルをゴミ箱に移動
-                Debug.Print("Source Name [" + SourceFile.Name + "]");
-                string[] MatchFiles = SourceFile.MatchFiles;
-
-                if (MatchFiles != null)
+                else
                 {
-                    foreach (string file in MatchFiles)
-                    {
-                        Debug.Print("ゴミ箱移動 [" + file + "]");
+                    // ソースファイルのパターンマッチする全ファイルをゴミ箱に移動
+                    Debug.Print("Source Name [" + SourceFile.Name + "]");
 
-                        FileSystem.DeleteFile(
-                            file,
-                            UIOption.OnlyErrorDialogs,
-                            RecycleOption.SendToRecycleBin);
+                    if (MatchFiles != null)
+                    {
+                        foreach (string file in MatchFiles)
+                        {
+                            Debug.Print("ゴミ箱移動 [" + file + "]");
+
+                            FileSystem.DeleteFile(
+                                file,
+                                UIOption.OnlyErrorDialogs,
+                                RecycleOption.SendToRecycleBin);
+                        }
                     }
+                }
+            }
+
+            foreach (TargetFiles file in myListTargetFiles)
+            {
+                if (file.IsDeleted)
+                {
+                    Debug.Print("削除フラグ ゴミ箱移動 [" + file.FileInfo.FullName + "]");
+                    FileSystem.DeleteFile(
+                        file.FileInfo.FullName,
+                        UIOption.OnlyErrorDialogs,
+                        RecycleOption.SendToRecycleBin);
                 }
             }
         }

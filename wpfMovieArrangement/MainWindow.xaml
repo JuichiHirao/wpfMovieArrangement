@@ -186,6 +186,7 @@
                     <DataGridTextColumn Header="パス" Binding="{Binding Path=DispRelativePath}" IsReadOnly="True" />
                     <DataGridTextColumn Header="結果" Binding="{Binding Path=Message}" FontSize="9" IsReadOnly="True" />
                     <DataGridTextColumn Header="更新日時" Binding="{Binding Path=ListUpdateDate, StringFormat='yyyy/MM/dd HH:mm:ss'}" />
+                    <DataGridCheckBoxColumn Header="削除" Binding="{Binding Path=IsDeleted}" CellStyle="{StaticResource SingleClickEditing}" />
                 </DataGrid.Columns>
             </DataGrid>
             <Button Name="btnExecuteNameChange" Content="実行" Margin="50,5,50,5" Grid.Row="6" Click="btnExecuteNameChange_Click" />

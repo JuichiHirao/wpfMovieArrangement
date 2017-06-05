@@ -418,6 +418,10 @@ namespace wpfMovieArrangement
             //       http://wpf.codeplex.com/wikipage?title=Single-Click Editing&ProjectName=wpf
             DataGridCell cell = sender as DataGridCell;
 
+            bool IsClickDelete = false;
+            if (cell.Column.Header.Equals("削除"))
+                IsClickDelete = true;
+
             if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
             {
                 TargetFiles selStartFile = (TargetFiles)dgridArrangementTarget.SelectedItem;
@@ -435,7 +439,15 @@ namespace wpfMovieArrangement
                             selStart = true;
 
                         if (selStart)
-                            file.IsSelected = true;
+                        {
+                            if (IsClickDelete)
+                            {
+                                file.IsDeleted = true;
+                                file.IsSelected = false;
+                            }
+                            else
+                                file.IsSelected = true;
+                        }
 
                         if (file.Name.Equals(selEndFile.Name))
                             break;
@@ -467,18 +479,40 @@ namespace wpfMovieArrangement
                         TargetFiles selFile = row.Item as TargetFiles;
                         if (row != null && !row.IsSelected)
                         {
-                            if (selFile.IsSelected)
-                                selFile.IsSelected = false;
+                            if (IsClickDelete)
+                            {
+                                if (selFile.IsDeleted)
+                                    selFile.IsDeleted = false;
+                                else
+                                {
+                                    selFile.IsDeleted = true;
+                                    selFile.IsSelected = false;
+                                }
+                            }
                             else
-                                //row.IsSelected = true;
-                                selFile.IsSelected = true;
+                            {
+                                if (selFile.IsSelected)
+                                    selFile.IsSelected = false;
+                                else
+                                    selFile.IsSelected = true;
+                            }
                         }
                         else
                         {
-                            if (row.IsSelected && selFile.IsSelected)
-                                row.IsSelected = false;
+                            if (IsClickDelete)
+                            {
+                                if (row.IsSelected && selFile.IsDeleted)
+                                    row.IsSelected = false;
 
-                            selFile.IsSelected = false;
+                                selFile.IsDeleted = false;
+                            }
+                            else
+                            {
+                                if (row.IsSelected && selFile.IsSelected)
+                                    row.IsSelected = false;
+
+                                selFile.IsSelected = false;
+                            }
                         }
                     }
                 }
@@ -590,12 +624,15 @@ namespace wpfMovieArrangement
 
             try
             {
-                service.DeleteFiles();
+                service.DeleteFiles(ColViewDestFiles.listTargetFiles);
             }
             catch(Exception ex)
             {
                 MessageBox.Show("削除失敗 " + ex.Message);
             }
+
+            service.MovieImportService serviceImport = new service.MovieImportService();
+            listImportTarget = serviceImport.GetList(new DbConnection());
 
             txtChangeFileName.Text = "";
             txtChangeTag.Text = "";
@@ -672,15 +709,16 @@ namespace wpfMovieArrangement
             if (!CanGetDirectoryInfo())
                 return;
 
-            ColViewDestFiles.Refresh();
-            //dgridDestFile.ItemsSource = ColViewFileGeneTargetFiles.GetDestFiles(txtBasePath.Text, REGEX_MOVIE_EXTENTION);
+            ColViewDestFiles.Refresh(collection.FileGeneTargetFilesCollection.REGEX_MOVIE_EXTENTION);
+
+            SetDataGridDefaultSelectSetting();
         }
 
         private void btnSearch_Click(object sender, RoutedEventArgs e)
         {
             ColViewArrangementTarget.FilterSearchProductNumber = txtSearch.Text;
             ColViewArrangementTarget.Refresh();
-            ColViewDestFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFileSearchString();
+            ColViewDestFiles.FilterSearchProductNumber = txtSearch.Text;
             ColViewDestFiles.Refresh();
 
             btnExecuteNameChange.Focus();
@@ -853,28 +891,62 @@ namespace wpfMovieArrangement
                 }
                 else
                 {
+                    string searchStr = (dispinfoSelectMovieImportData != null) ? dispinfoSelectMovieImportData.GetFileSearchString() : "";
+                    collection.FileGeneTargetFilesCollection ColViewCheckRarFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text, collection.FileGeneTargetFilesCollection.REGEX_RARONLY_EXTENTION, searchStr);
+                    ColViewCheckRarFiles.Execute();
+
+                    foreach (var data in ColViewCheckRarFiles.ColViewListTargetFiles)
+                    {
+                        MessageBoxResult result = MessageBox.Show("RARファイルが存在します、編集に移動しますか？", "確認", MessageBoxButton.OKCancel);
+
+                        if (result == MessageBoxResult.OK)
+                        {
+                            txtFileGeneSearchText.Text = dispinfoSelectMovieImportData.GetFilterProductNumber();
+
+                            ColViewFileGeneTargetFiles.FilterSearchProductNumber = txtFileGeneSearchText.Text;
+                            ColViewFileGeneTargetFiles.Refresh();
+
+                            SetUIElementFromImportData(dispinfoSelectMovieImportData);
+
+                            lgridFilenameGenerate.Visibility = System.Windows.Visibility.Visible;
+
+                            CahngeModeFilenameGenerateExecute(null, null);
+
+                            gridSelectTargetFilename.Visibility = Visibility.Hidden;
+
+                            return;
+                        }
+                    }
                     ChangeModeNormalMovieExecute(null, null);
                 }
 
                 lgridMain.Visibility = System.Windows.Visibility.Visible;
 
-                dgridArrangementTarget.SelectedItem = ColViewArrangementTarget.GetSelectTargetMovieFile();
-
-                List<TargetFiles> filesList = ColViewArrangementTarget.GetSelectTargetFiles();
-                foreach (TargetFiles file in filesList)
-                {
-                    foreach (TargetFiles item in dgridDestFile.ItemsSource)
-                    {
-                        if (file.Name.Equals(item.Name))
-                            item.IsSelected = true;
-                    }
-                }
+                SetDataGridDefaultSelectSetting();
 
                 btnExecuteNameChange.Focus();
             }
             txtbTargetImportId.Text = Convert.ToString(dispinfoSelectMovieImportData.Id);
 
             gridSelectTargetFilename.Visibility = Visibility.Hidden;
+        }
+
+        /// <summary>
+        /// dgridArramentTargetは動画、dgridDestFileは検索一致のファイルを全て選択チェックの状態にする
+        /// </summary>
+        private void SetDataGridDefaultSelectSetting()
+        {
+            dgridArrangementTarget.SelectedItem = ColViewArrangementTarget.GetSelectTargetMovieFile();
+
+            List<TargetFiles> filesList = ColViewArrangementTarget.GetSelectTargetFiles();
+            foreach (TargetFiles file in filesList)
+            {
+                foreach (TargetFiles item in dgridDestFile.ItemsSource)
+                {
+                    if (file.Name.Equals(item.Name))
+                        item.IsSelected = true;
+                }
+            }
         }
 
         private void btnBasePathPaste_Click(object sender, RoutedEventArgs e)

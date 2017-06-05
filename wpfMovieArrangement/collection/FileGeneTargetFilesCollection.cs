@@ -13,6 +13,7 @@ namespace wpfMovieArrangement.collection
 {
     class FileGeneTargetFilesCollection
     {
+        public static string REGEX_RARONLY_EXTENTION = @".*\.rar$";
         public static string REGEX_MOVIE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*png$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.mov|.*\.3gp";
         public static string REGEX_MOVIEONLY_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.mov|.*\.3gp";
         public static string REGEX_TARGETFILE_EXTENTION = @".*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$|.*asf$|.*png$|.*jpg$|.*jpeg$|.*iso$|.*mkv$|.*\.m4v|.*\.rmvb|.*\.rm|.*\.rar|.*\.mov|.*\.3gp";
@@ -62,17 +63,21 @@ namespace wpfMovieArrangement.collection
             DataSet();
         }
 
-        public FileGeneTargetFilesCollection(string myBasePath, string myTargetExtention)
+        public FileGeneTargetFilesCollection(string myBasePath, string myTargetExtention, string myFilterProductNumber)
         {
             BasePath = myBasePath;
             TargetExtention = myTargetExtention;
 
+            FilterSearchProductNumber = myFilterProductNumber;
             DataSet();
         }
 
         private void DataSet()
         {
-            SetDestFiles(BasePath, REGEX_TARGETFILE_EXTENTION);
+            if (TargetExtention != null && TargetExtention.Length > 0)
+                SetDestFiles(BasePath, TargetExtention);
+            else
+                SetDestFiles(BasePath, REGEX_TARGETFILE_EXTENTION);
 
             ColViewListTargetFiles = CollectionViewSource.GetDefaultView(listTargetFiles);
         }

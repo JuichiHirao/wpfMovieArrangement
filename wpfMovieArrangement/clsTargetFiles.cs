@@ -38,6 +38,20 @@ namespace wpfMovieArrangement
             }
         }
 
+        protected bool _IsDeleted;
+        public bool IsDeleted
+        {
+            get
+            {
+                return _IsDeleted;
+            }
+            set
+            {
+                _IsDeleted = value;
+                NotifyPropertyChanged("IsDeleted");
+            }
+        }
+
         protected FileInfo _FileInfo;
         public FileInfo FileInfo
         {
