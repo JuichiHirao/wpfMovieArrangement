@@ -579,56 +579,72 @@ namespace wpfMovieArrangement
             }
             dispinfoSelectMovieImportData.Filename = txtChangeFileName.Text;
 
-            try
+            object o = dispinfoSelectMovieImportData.HdFlag;
+
+            if (o != null && (bool)o == true)
             {
-                DateCopyService.CheckDataGridSelectItem(dgridArrangementTarget, "上のファイル", 1);
+                // HD動画への変更の場合
 
-                service.BasePath = txtBasePath.Text;
-                service.DestFilename = txtChangeFileName.Text;
-                service.LabelPath = txtLabelPath.Text;
+                // ファイル情報の更新
 
-                service.SetSourceFile(dgridArrangementTarget);
+                // ファイル名の変更
 
-                // 選択したファイルのみを対象に内部プロパティへ設定
-                service.SetSelectedOnlyFiles(ColViewDestFiles.listTargetFiles);
-
-                // JPEGの変換用の情報を生成する（日付コピー等はまだ実行されない）
-                service.SetJpegActionInfo();
-
-                // 動画の変換用の情報を生成する（日付コピー等はまだ実行されない）
-                service.SetMovieActionInfo();
-
-                // データベースへ登録用の情報を生成する
-                service.SetDbMovieFilesInfo(dispinfoSelectMovieImportData);
-
-                service.DbExport();
-
-                // 動画、画像ファイルの移動、日付コピー等の実行
-                service.Execute();
-            }
-            catch (Exception exp)
-            {
-                Debug.Write(exp);
-                MessageBox.Show(exp.Message);
                 return;
             }
-            finally
+            else
             {
-                // 選択中のファイル一覧はクリアする（次の対象動画になってしまうので）
-                foreach (TargetFiles file in dgridDestFile.ItemsSource)
-                    file.IsSelected = false;
+                // 動画情報などの登録の場合
+                try
+                {
+                    DateCopyService.CheckDataGridSelectItem(dgridArrangementTarget, "上のファイル", 1);
 
-                // フィルターをクリアしないと再取得した直後に動作して不要なチェックが付いてしまう
-                dgridDestFile.Items.Filter = null;
-            }
+                    service.BasePath = txtBasePath.Text;
+                    service.DestFilename = txtChangeFileName.Text;
+                    service.LabelPath = txtLabelPath.Text;
 
-            try
-            {
-                service.DeleteFiles(ColViewDestFiles.listTargetFiles);
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show("削除失敗 " + ex.Message);
+                    service.SetSourceFile(dgridArrangementTarget);
+
+                    // 選択したファイルのみを対象に内部プロパティへ設定
+                    service.SetSelectedOnlyFiles(ColViewDestFiles.listTargetFiles);
+
+                    // JPEGの変換用の情報を生成する（日付コピー等はまだ実行されない）
+                    service.SetJpegActionInfo();
+
+                    // 動画の変換用の情報を生成する（日付コピー等はまだ実行されない）
+                    service.SetMovieActionInfo();
+
+                    // データベースへ登録用の情報を生成する
+                    service.SetDbMovieFilesInfo(dispinfoSelectMovieImportData);
+
+                    service.DbExport();
+
+                    // 動画、画像ファイルの移動、日付コピー等の実行
+                    service.Execute();
+                }
+                catch (Exception exp)
+                {
+                    Debug.Write(exp);
+                    MessageBox.Show(exp.Message);
+                    return;
+                }
+                finally
+                {
+                    // 選択中のファイル一覧はクリアする（次の対象動画になってしまうので）
+                    foreach (TargetFiles file in dgridDestFile.ItemsSource)
+                        file.IsSelected = false;
+
+                    // フィルターをクリアしないと再取得した直後に動作して不要なチェックが付いてしまう
+                    dgridDestFile.Items.Filter = null;
+                }
+
+                try
+                {
+                    service.DeleteFiles(ColViewDestFiles.listTargetFiles);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("削除失敗 " + ex.Message);
+                }
             }
 
             service.MovieImportService serviceImport = new service.MovieImportService();
@@ -992,11 +1008,13 @@ namespace wpfMovieArrangement
             {
                 importData = new MovieImportData(titletext);
 
+                txtbFileGenFileId.Text = Convert.ToString(importData.FileId);
                 txtKind.Text = Convert.ToString(importData.Kind);
                 txtFilenameGenDate.Text = importData.ProductDate.ToString("yyyy/MM/dd");
                 txtProductNumber.Text = importData.ProductNumber;
                 txtMaker.Text = importData.Maker;
                 txtTitle.Text = importData.Title;
+                tbtnFileGenHdUpdate.IsChecked = importData.HdFlag;
 
                 if (importData.RarFlag == true)
                     tbtnFileGeneTextAddRar.IsChecked = true;
@@ -1013,6 +1031,68 @@ namespace wpfMovieArrangement
             {
                 listMakers = MovieMakers.GetAllData();
                 MaxListMakers = listMakers.Count();
+            }
+
+            importData = new MovieImportData();
+            // メーカー情報と合わせるための製品番号、HDかどうかの情報をParse
+            importData.ParseFromPasteText(titletext);
+
+            if (importData.ProductNumber != null && importData.ProductNumber.Length > 0)
+            {
+                dispinfoSelectMovieImportData = null;
+
+                // MOVIE_IMPORT_DATAに既存が存在する場合は、それを表示
+                foreach(MovieImportData imp in listImportTarget)
+                {
+                    if (imp.ProductNumber.Equals(importData.ProductNumber))
+                    {
+                        dispinfoSelectMovieImportData = imp;
+                        break;
+                    }
+                }
+
+                // HDの場合は、MOVIE_FILESからも一致するデータが存在するかを取得
+                if (dispinfoSelectMovieImportData == null)
+                {
+                    foreach (MovieFileContents file in listFilesContents)
+                    {
+                        //string pnum = data.ProductNumber.Replace("-", "");
+                        if (file.ProductNumber.Length <= 0)
+                            continue;
+
+                        if (file.ProductNumber.Equals("SD") || file.ProductNumber.Equals("HD") || file.ProductNumber.Equals("DMM"))
+                            continue;
+
+                        if (file.ProductNumber.Equals(importData.ProductNumber))
+                        {
+                            dispinfoSelectMovieImportData = new MovieImportData(file.Name);
+
+                            if (importData.HdKind != null)
+                                dispinfoSelectMovieImportData.Title = dispinfoSelectMovieImportData.Title + " " + importData.HdKind.Name;
+                            else
+                                dispinfoSelectMovieImportData.Title = dispinfoSelectMovieImportData.Title;
+
+                            dispinfoSelectMovieImportData.FileId = file.Id;
+                            dispinfoSelectMovieImportData.HdKind = importData.HdKind;
+                            dispinfoSelectMovieImportData.HdFlag = true;
+
+                            break;
+                        }
+                    }
+                }
+
+                txtTitleText.Text = titletext;
+
+                if (dispinfoSelectMovieImportData != null)
+                {
+                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
+
+                    ColViewFileGeneTargetFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFilterProductNumber();
+                    txtFileGeneSearchText.Text = ColViewFileGeneTargetFiles.FilterSearchProductNumber;
+                    ColViewFileGeneTargetFiles.Refresh();
+
+                    return;
+                }
             }
 
             MovieFileContents moviefile = new MovieFileContents();
@@ -1292,6 +1372,9 @@ namespace wpfMovieArrangement
             MovieImportData movieImportData = new MovieImportData();
 
             movieImportData.CopyText = txtTitleText.Text;
+
+            if (txtbFileGenFileId.Text.Length > 0)
+                movieImportData.FileId = Convert.ToInt32(txtbFileGenFileId.Text);
             if (txtKind.Text.Length > 0)
                 movieImportData.Kind = Convert.ToInt32(txtKind.Text);
             movieImportData.MatchProduct = txtMatchStr.Text;
@@ -1300,6 +1383,7 @@ namespace wpfMovieArrangement
             movieImportData.Maker = txtMaker.Text;
             movieImportData.Title = txtTitle.Text;
             movieImportData.Actresses = txtActresses.Text;
+            movieImportData.HdFlag = tbtnFileGenHdUpdate.IsChecked;
             movieImportData.RarFlag = tbtnFileGeneTextAddRar.IsChecked;
             movieImportData.Tag = txtTag.Text;
             movieImportData.GenerateFilename();
@@ -1312,7 +1396,12 @@ namespace wpfMovieArrangement
 
         private void SetUIElementFromImportData(MovieImportData myData)
         {
-            txtbImportId.Text = Convert.ToString(myData.Id);
+            if (myData.FileId > 0)
+                txtbFileGenFileId.Text = Convert.ToString(myData.FileId);
+
+            if (myData.Id > 0)
+                txtbFileGenImportId.Text = Convert.ToString(myData.Id);
+
             txtTitleText.Text = myData.CopyText;
             txtKind.Text = myData.Kind.ToString();
             txtMatchStr.Text = myData.MatchProduct;
@@ -1324,11 +1413,15 @@ namespace wpfMovieArrangement
             txtTag.Text = myData.Tag;
             tbtnFileGeneTextAddRar.IsChecked = myData.RarFlag;
             txtFilenameGenerate.Text = myData.Filename;
+
+            if (myData.HdKind != null)
+                tbtnFileGenHdUpdate.IsChecked = true;
         }
 
         private void ClearUIElement()
         {
-            txtbImportId.Text = "";
+            txtbFileGenImportId.Text = "";
+            txtbFileGenFileId.Text = "";
             txtTitleText.Text = "";
             if (chkKindFixed.IsChecked == null || !(bool)chkKindFixed.IsChecked) txtKind.Text = "";
             txtMatchStr.Text = "";
@@ -1340,6 +1433,8 @@ namespace wpfMovieArrangement
             txtTag.Text = "";
             tbtnFileGeneTextAddRar.IsChecked = false;
             txtFilenameGenerate.Text = "";
+            tbtnFileGenHdUpdate.IsChecked = false;
+
         }
 
         private void GenerateFilename(object sender, RoutedEventArgs e)
@@ -1365,7 +1460,7 @@ namespace wpfMovieArrangement
             if (Validation.GetHasError(txtFilenameGenDate))
                 return;
 
-            string importId = txtbImportId.Text;
+            string importId = txtbFileGenImportId.Text;
 
             service.MovieImportService service = new service.MovieImportService();
             if (importId.Length > 0)

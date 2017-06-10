@@ -21,8 +21,8 @@ namespace wpfMovieArrangement.service
             else
                 dbcon = new DbConnection();
 
-            sqlcmd = "INSERT INTO MOVIE_IMPORT ( COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, TAG, FILENAME ) ";
-            sqlcmd = sqlcmd + "VALUES( @CopyText, @Kind, @MatchProduct, @ProductNumber, @ProductDate, @Maker, @Title, @Actresses, @RarFlag, @Tag, @Filename ) ";
+            sqlcmd = "INSERT INTO MOVIE_IMPORT ( COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, TAG, FILENAME, HD_KIND, MOVIE_FILES_ID ) ";
+            sqlcmd = sqlcmd + "VALUES( @CopyText, @Kind, @MatchProduct, @ProductNumber, @ProductDate, @Maker, @Title, @Actresses, @RarFlag, @Tag, @Filename, @HdKind, @MovieFilesId ) ";
 
             SqlCommand scmd = new SqlCommand(sqlcmd, dbcon.getSqlConnection());
             DataTable dtSaraly = new DataTable();
@@ -73,6 +73,15 @@ namespace wpfMovieArrangement.service
             sqlparam.Value = myData.Filename;
             listSqlParams.Add(sqlparam);
 
+            int HdKind = (myData.HdKind != null) ? myData.HdKind.Kind : 0;
+            sqlparam = new SqlParameter("@HdKind", SqlDbType.Int);
+            sqlparam.Value = HdKind;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@MovieFilesId", SqlDbType.Int);
+            sqlparam.Value = myData.FileId;
+            listSqlParams.Add(sqlparam);
+
             dbcon.SetParameter(listSqlParams.ToArray());
 
             dbcon.execSqlCommand(sqlcmd);
@@ -108,6 +117,8 @@ namespace wpfMovieArrangement.service
             sqlcmd += ", RAR_FLAG = @RarFlag ";
             sqlcmd += ", TAG = @Tag ";
             sqlcmd += ", FILENAME = @Filename ";
+            sqlcmd += ", HD_KIND = @HdKind ";
+            sqlcmd += ", MOVIE_FILES_ID = @MovieFilesId ";
             sqlcmd += "WHERE ID = @Id ";
 
             SqlCommand scmd = new SqlCommand(sqlcmd, dbcon.getSqlConnection());
@@ -157,6 +168,15 @@ namespace wpfMovieArrangement.service
 
             sqlparam = new SqlParameter("@Filename", SqlDbType.VarChar);
             sqlparam.Value = myData.Filename;
+            listSqlParams.Add(sqlparam);
+
+            int HdKind = (myData.HdKind != null) ? myData.HdKind.Kind : ((myData.HdFlag == true) ? 1 : 0);
+            sqlparam = new SqlParameter("@HdKind", SqlDbType.Int);
+            sqlparam.Value = HdKind;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@MovieFilesId", SqlDbType.Int);
+            sqlparam.Value = myData.FileId;
             listSqlParams.Add(sqlparam);
 
             sqlparam = new SqlParameter("@Id", SqlDbType.Int);
@@ -270,7 +290,7 @@ namespace wpfMovieArrangement.service
             else
                 dbcon = new DbConnection();
 
-            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE ";
+            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE, HD_KIND, MOVIE_FILES_ID ";
             sqlcmd = sqlcmd + "FROM MOVIE_IMPORT ";
             sqlcmd = sqlcmd + "ORDER BY CREATE_DATE ";
 
@@ -305,6 +325,8 @@ namespace wpfMovieArrangement.service
                         data.Filename = DbExportCommon.GetDbString(reader, 11);
                         data.CreateDate = DbExportCommon.GetDbDateTime(reader, 12);
                         data.UpdateDate = DbExportCommon.GetDbDateTime(reader, 13);
+                        data.SetHdKind(DbExportCommon.GetDbInt(reader, 14));
+                        data.FileId = DbExportCommon.GetDbInt(reader, 15);
 
                         listData.Add(data);
                     }

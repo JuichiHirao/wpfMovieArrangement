@@ -9,7 +9,33 @@ namespace wpfMovieArrangement
 {
     class MovieImportData
     {
+        public List<HdInfo> HdKindList = new List<HdInfo>();
+
+        private void SetHdInfo()
+        {
+            HdKindList.Add(new HdInfo(1, "60fps HD", "\\[FHD60fps\\]"));
+            HdKindList.Add(new HdInfo(2, "FHD", "\\[FHD\\]"));
+            HdKindList.Add(new HdInfo(3, "FHD", "FHD"));
+            HdKindList.Add(new HdInfo(4, "HD", "\\[HD\\]"));
+        }
+        public class HdInfo
+        {
+            public HdInfo(int myKind, string myName, string myStrRegex)
+            {
+                Kind = myKind;
+                Name = myName;
+                StrtRegex = myStrRegex;
+            }
+            public int Kind { get; set; }
+
+            public string StrtRegex { get; set; }
+
+            public string Name { get; set; }
+        }
+
         public int Id { get; set; }
+
+        public int FileId { get; set; }
 
         public string CopyText { get; set; }
 
@@ -51,6 +77,47 @@ namespace wpfMovieArrangement
         public string Title { get; set; }
 
         public string Actresses { get; set; }
+
+        public HdInfo HdKind { get; set; }
+
+        private bool _HdFlag;
+        public bool? HdFlag
+        {
+            get
+            {
+                return _HdFlag;
+            }
+            set
+            {
+                if (value == null)
+                    _HdFlag = false;
+                else
+                {
+                    _HdFlag = (bool)value;
+                }
+            }
+        }
+
+        public void SetHdKind(int myKind)
+        {
+            if (myKind == 0)
+            {
+                _HdFlag = false;
+                HdKind = null;
+            }
+
+            foreach (HdInfo hdInfo in HdKindList)
+            {
+                if (hdInfo.Kind == myKind)
+                {
+                    HdKind = hdInfo;
+                    _HdFlag = true;
+                    break;
+                }
+            }
+
+            return;
+        }
 
         private bool _RarFlag;
         public bool? RarFlag
@@ -105,7 +172,8 @@ namespace wpfMovieArrangement
 
         public MovieImportData()
         {
-
+            HdKind = null;
+            SetHdInfo();
         }
 
         public string GetFilterProductNumber()
@@ -128,6 +196,7 @@ namespace wpfMovieArrangement
 
         public MovieImportData(string myPasteText)
         {
+            SetHdInfo();
             string pasteText = "";
 
             if (myPasteText.IndexOf("RAR") == 0)
@@ -188,6 +257,142 @@ namespace wpfMovieArrangement
             }
 
             return;
+        }
+
+        public void ParseFromPasteText(string myPasteText)
+        {
+            string editText = "";
+            Regex regexHd = null;
+            HdInfo matchHdInfo = null;
+            foreach (HdInfo hd in HdKindList)
+            {
+                regexHd = new Regex(hd.Name);
+
+                if (regexHd.IsMatch(myPasteText))
+                {
+                    editText = myPasteText.Replace(regexHd.Match(myPasteText).Value.ToString(), "");
+                    editText.Trim();
+                    HdKind = hd;
+                    break;
+                }
+            }
+
+            if (matchHdInfo == null)
+            {
+                editText = myPasteText.Trim();
+            }
+
+            // 日付を取得
+            string matchProductDate = ParseSetSellDate(editText);
+
+            // 日付に「-」ハイフンがある場合は品番の区切りと間違えるので日付部分を削除
+            //if (MatchStrSellDate.IndexOf("-") >= 0)
+            //    EditPasteText = myText.Replace(MatchStrSellDate, "");
+
+            // テキスト内の日付の後ろ文字列は女優名として取得
+            ParseSetActress(editText, matchProductDate);
+
+            // 品番を設定
+            ParseSetProductNumber(editText);
+        }
+
+        public string ParseSetSellDate(string myText)
+        {
+            if (myText == null || myText.Length > 0)
+                return "";
+
+            Regex regexDate = new Regex("[12][0-9][0-9][0-9][/-][0-1]{0,1}[0-9][/-][0-9]{0,1}[0-9]");
+
+            string matchStr = "";
+            if (regexDate.IsMatch(myText))
+            {
+                matchStr = regexDate.Match(myText).Value.ToString();
+                try
+                {
+                    ProductDate = Convert.ToDateTime(matchStr);
+                    //DispSellDate = ProductDate.ToString("yyyyMMdd");
+                }
+                catch (Exception)
+                {
+                    // 何もしない
+                }
+            }
+
+            return matchStr;
+        }
+        public void ParseSetActress(string myText, string myMatchProductDate)
+        {
+            string matchStr = "";
+            if (myMatchProductDate != null && myMatchProductDate.Length > 0)
+            {
+                matchStr = Regex.Match(myText, myMatchProductDate + "(.*)").Groups[0].Value;
+                matchStr = matchStr.Replace(myMatchProductDate, "").Trim();
+            }
+
+            //Remark = ConvertActress(matchStr);
+        }
+
+        public void ParseSetProductNumber(string myText)
+        {
+            Regex regex = new Regex("\\[{0,1}[0-9A-Za-z]{1,}-[0-9]*\\]{0,1}[A-Za-z]{0,1}");
+
+            string matchStr = "";
+            // 品番っぽい文字列が存在する場合は暫定でAVRIPを設定
+            if (regex.IsMatch(myText))
+            {
+                matchStr = regex.Match(myText).Value.ToString();
+                ProductNumber = matchStr.Replace("[", "").Replace("]", "").ToUpper();
+            }
+            // 品番っぽいのが無い場合は、数字のみで品番を取得
+            else
+            {
+                Regex regexP1 = new Regex("[0-9]*[_-][0-9]*");
+                Regex regexP2 = new Regex(" [0-9]*");
+                Regex regexP3 = new Regex(" [A-Za-z]*[0-9]*");
+
+                if (regexP1.IsMatch(myText))
+                    matchStr = regexP1.Match(myText).Value.ToString().Trim();
+                else if (regexP2.IsMatch(myText))
+                    matchStr = regexP2.Match(myText).Value.ToString().Trim();
+                else if (regexP3.IsMatch(myText))
+                    matchStr = regexP3.Match(myText).Value.ToString().Trim().ToUpper();
+
+                Kind = 0;
+                if (matchStr != null && matchStr.Length > 0)
+                    ProductNumber = matchStr;
+            }
+        }
+        private string ConvertActress(string myText)
+        {
+            string[] arrSplit = { " ", ",", "／" };
+            string sepa = "";
+            string[] arrActress = null;
+            string actresses = "";
+
+            foreach (string split in arrSplit)
+            {
+                string[] arrsepa = { split };
+                arrActress = myText.Split(arrsepa, StringSplitOptions.None);
+                if (arrActress.Length > 1)
+                {
+                    //MatchStrActresses = myText;
+                    sepa = split;
+                    break;
+                }
+            }
+            if (sepa.Length <= 0)
+                actresses = myText.Trim();
+            else
+            {
+                foreach (string actress in arrActress)
+                {
+                    if (actresses.Length > 0)
+                        actresses += "、";
+                    actresses += actress;
+                }
+            }
+
+            return actresses;
         }
     }
 }
