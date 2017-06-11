@@ -26,7 +26,7 @@ namespace wpfMovieArrangement.service
 
         List<TargetFiles> listSelectedFiles;
         List<ActionInfo> listActionInfo = null;
-        MovieImportData targetImportData;
+        public MovieImportData targetImportData;
         MovieFileContents targetFileContentsData;
 
         TargetFiles SourceFile = new TargetFiles();
@@ -301,6 +301,9 @@ namespace wpfMovieArrangement.service
                     }
                 }
             }
+
+            if (myListTargetFiles == null || myListTargetFiles.Count <= 0)
+                return;
 
             foreach (TargetFiles file in myListTargetFiles)
             {

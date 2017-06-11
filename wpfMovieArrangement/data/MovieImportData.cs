@@ -266,7 +266,7 @@ namespace wpfMovieArrangement
             HdInfo matchHdInfo = null;
             foreach (HdInfo hd in HdKindList)
             {
-                regexHd = new Regex(hd.Name);
+                regexHd = new Regex(hd.StrtRegex);
 
                 if (regexHd.IsMatch(myPasteText))
                 {

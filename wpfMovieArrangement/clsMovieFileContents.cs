@@ -289,5 +289,14 @@ namespace wpfMovieArrangement
             return WorkImageUri;
         }
 
+        public string GetLastSentenceFromLabel()
+        {
+            if (Label.LastIndexOf("\\") >= 0)
+            {
+                return Label.Substring(Label.LastIndexOf("\\") + 1);
+            }
+
+            return Label;
+        }
     }
 }

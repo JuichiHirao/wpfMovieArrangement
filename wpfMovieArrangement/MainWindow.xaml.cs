@@ -567,9 +567,6 @@ namespace wpfMovieArrangement
                 return;
             }
 
-            FilesRegisterService service = new FilesRegisterService(new DbConnection());
-            FileControl fileControl = new FileControl();
-
             if (!txtChangeFileName.Text.Equals(dispinfoSelectMovieImportData.Filename))
             {
                 MessageBoxResult result = MessageBox.Show("ファイル名が変更されていますが宜しいですか？", "変更確認", MessageBoxButton.OKCancel);
@@ -579,34 +576,72 @@ namespace wpfMovieArrangement
             }
             dispinfoSelectMovieImportData.Filename = txtChangeFileName.Text;
 
-            object o = dispinfoSelectMovieImportData.HdFlag;
+            FilesRegisterService service = new FilesRegisterService(new DbConnection());
+            FileControl fileControl = new FileControl();
 
-            if (o != null && (bool)o == true)
+            try
             {
-                // HD動画への変更の場合
+                DateCopyService.CheckDataGridSelectItem(dgridArrangementTarget, "上のファイル", 1);
 
-                // ファイル情報の更新
+                service.BasePath = txtBasePath.Text;
+                service.DestFilename = txtChangeFileName.Text;
+                service.LabelPath = txtLabelPath.Text;
 
-                // ファイル名の変更
+                service.SetSourceFile(dgridArrangementTarget);
 
+                // 選択したファイルのみを対象に内部プロパティへ設定
+                service.SetSelectedOnlyFiles(ColViewDestFiles.listTargetFiles);
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+                MessageBox.Show(ex.Message, "初期設定エラー");
                 return;
+            }
+
+            if (dispinfoSelectMovieImportData.FileId > 0)
+            {
+                try
+                {
+                    service.targetImportData = dispinfoSelectMovieImportData;
+                    // HD動画への変更の場合
+                    HdUpdateService hdUpdateService = new HdUpdateService(new DbConnection());
+
+                    hdUpdateService.BasePath = txtBasePath.Text;
+                    hdUpdateService.SetSelectedOnlyFiles(ColViewDestFiles.listTargetFiles);
+
+                    MovieFileContents contents = null;
+
+                    int fileId = dispinfoSelectMovieImportData.FileId;
+                    foreach (MovieFileContents data in listFilesContents)
+                    {
+                        if (data.Id == fileId)
+                        {
+                            contents = data;
+                            break;
+                        }
+                    }
+                    if (contents == null)
+                    {
+                        MessageBox.Show("対象のデータが存在しません " + dispinfoSelectMovieImportData.FileId);
+                        return;
+                    }
+                    hdUpdateService.Execute(dispinfoSelectMovieImportData, contents);
+
+                    txtStatusBar.Text = "";
+                }
+                catch (Exception ex)
+                {
+                    Debug.Write(ex);
+                    MessageBox.Show(ex.Message, "HD動画変更エラー");
+                    return;
+                }
             }
             else
             {
                 // 動画情報などの登録の場合
                 try
                 {
-                    DateCopyService.CheckDataGridSelectItem(dgridArrangementTarget, "上のファイル", 1);
-
-                    service.BasePath = txtBasePath.Text;
-                    service.DestFilename = txtChangeFileName.Text;
-                    service.LabelPath = txtLabelPath.Text;
-
-                    service.SetSourceFile(dgridArrangementTarget);
-
-                    // 選択したファイルのみを対象に内部プロパティへ設定
-                    service.SetSelectedOnlyFiles(ColViewDestFiles.listTargetFiles);
-
                     // JPEGの変換用の情報を生成する（日付コピー等はまだ実行されない）
                     service.SetJpegActionInfo();
 
@@ -636,15 +671,15 @@ namespace wpfMovieArrangement
                     // フィルターをクリアしないと再取得した直後に動作して不要なチェックが付いてしまう
                     dgridDestFile.Items.Filter = null;
                 }
+            }
 
-                try
-                {
-                    service.DeleteFiles(ColViewDestFiles.listTargetFiles);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("削除失敗 " + ex.Message);
-                }
+            try
+            {
+                service.DeleteFiles(ColViewDestFiles.listTargetFiles);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("削除失敗 " + ex.Message);
             }
 
             service.MovieImportService serviceImport = new service.MovieImportService();
@@ -936,6 +971,11 @@ namespace wpfMovieArrangement
                     ChangeModeNormalMovieExecute(null, null);
                 }
 
+                if (dispinfoSelectMovieImportData.FileId > 0)
+                    txtChangeTag.Background = new SolidColorBrush(Colors.PaleGreen);
+                else
+                    txtChangeTag.Background = null;
+
                 lgridMain.Visibility = System.Windows.Visibility.Visible;
 
                 SetDataGridDefaultSelectSetting();
@@ -1019,6 +1059,7 @@ namespace wpfMovieArrangement
                 if (importData.RarFlag == true)
                     tbtnFileGeneTextAddRar.IsChecked = true;
 
+                dispinfoSelectMovieImportData = importData;
                 ColViewFileGeneTargetFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFilterProductNumber();
                 ColViewFileGeneTargetFiles.Refresh();
 
