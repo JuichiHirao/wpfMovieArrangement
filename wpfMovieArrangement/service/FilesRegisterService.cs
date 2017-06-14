@@ -136,6 +136,9 @@ namespace wpfMovieArrangement.service
             targetFileContentsData.Name = DestFilename;
             targetFileContentsData.Label = LabelPath;
 
+            if (listExtension == null)
+                return;
+
             foreach (string ext in listExtension)
             {
                 if (ext.ToUpper().Equals(".JPG")

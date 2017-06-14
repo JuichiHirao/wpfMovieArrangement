@@ -1161,6 +1161,13 @@ namespace wpfMovieArrangement
             if (listMatchMaker.Count() == 1)
             {
                 RefrectMakerInfo(moviefile, listMatchMaker[0], MovieFileContents.KIND_URAAVRIP);
+                if (importData.HdKind != null)
+                {
+                    Regex regex = new Regex(importData.HdKind.StrtRegex);
+                    MatchCollection mc = regex.Matches(txtTitleText.Text);
+                    string title = txtTitle.Text.Replace(mc[0].Value.ToString(), "");
+                    txtTitle.Text = title.Trim() + " " + importData.HdKind.Name;
+                }
             }
             else
             {
