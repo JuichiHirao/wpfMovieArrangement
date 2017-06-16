@@ -32,8 +32,10 @@ namespace wpfMovieArrangement
         private List<MovieMaker> listMakers = null;
         ICollectionView ColViewListMakers;
         private int MaxListMakers = 0;
-        private List<MovieFileContents> listFilesContents = null;
+        //private List<MovieFileContents> listFilesContents = null;
         private List<MovieImportData> listImportTarget = null;
+
+        private collection.MovieFileContentsCollection ColViewMovieFileContents;
 
         private collection.FileGeneTargetFilesCollection ColViewFileGeneTargetFiles;
         private collection.FileGeneTargetFilesCollection ColViewArrangementTarget; // dgridArrangementTarget
@@ -170,6 +172,8 @@ namespace wpfMovieArrangement
             ColViewArrangementTarget = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
             ColViewDestFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
 
+            ColViewMovieFileContents = new collection.MovieFileContentsCollection();
+
             dgridCheckExistFiles.ItemsSource = ColViewFileGeneTargetFiles.ColViewListTargetFiles;
             dgridArrangementTarget.ItemsSource = ColViewArrangementTarget.ColViewListTargetFiles;
             dgridDestFile.ItemsSource = ColViewDestFiles.ColViewListTargetFiles;
@@ -180,9 +184,6 @@ namespace wpfMovieArrangement
             dgridSelectTargetFilename.Width = statusbarMain.ActualWidth;
             service.MovieImportService service = new service.MovieImportService();
             listImportTarget = service.GetList(new DbConnection());
-
-            MovieFileContentsParent parent = new MovieFileContentsParent();
-            listFilesContents = parent.GetDbContents();
 
             DbConnection localDbCon = new DbConnection();
             txtbDbNowDate.Text = localDbCon.getDateStringSql("SELECT GETDATE()");
@@ -610,17 +611,8 @@ namespace wpfMovieArrangement
                     hdUpdateService.BasePath = txtBasePath.Text;
                     hdUpdateService.SetSelectedOnlyFiles(ColViewDestFiles.listTargetFiles);
 
-                    MovieFileContents contents = null;
+                    MovieFileContents contents = ColViewMovieFileContents.MatchId(dispinfoSelectMovieImportData.FileId);
 
-                    int fileId = dispinfoSelectMovieImportData.FileId;
-                    foreach (MovieFileContents data in listFilesContents)
-                    {
-                        if (data.Id == fileId)
-                        {
-                            contents = data;
-                            break;
-                        }
-                    }
                     if (contents == null)
                     {
                         MessageBox.Show("対象のデータが存在しません " + dispinfoSelectMovieImportData.FileId);
@@ -773,66 +765,6 @@ namespace wpfMovieArrangement
             ColViewDestFiles.Refresh();
 
             btnExecuteNameChange.Focus();
-
-            // MovieFileContentsからの二重登録防止のための検索は以下の順番で行う
-            // １）品番で完全一致（ハイフンを削除して大文字変換での一致）
-            // ２）１）で無い場合は品番で文字列を含むかどうかで検索
-            // ３）２）で無い場合はファイル名全体で検索
-            string bartext = "";
-            string searchword = txtSearch.Text.Replace("-", "");
-            // 品番で完全一致（ハイフンを削除して大文字変換での一致）
-            foreach (MovieFileContents data in listFilesContents)
-            {
-                if (data.ProductNumber.Length <= 0)
-                    continue;
-
-                string pnum = data.ProductNumber.Replace("-", "");
-
-                if (searchword.ToUpper().Equals(pnum.ToUpper()))
-                    bartext = bartext + data.Name;
-            }
-
-            // 品番で文字列を含むかどうかで検索
-            if (bartext.Length <= 0)
-            {
-                foreach (MovieFileContents data in listFilesContents)
-                {
-                    //string pnum = data.ProductNumber.Replace("-", "");
-                    if (data.ProductNumber.Length <= 0)
-                        continue;
-
-                    if (data.ProductNumber.Equals("SD") || data.ProductNumber.Equals("HD") || data.ProductNumber.Equals("DMM"))
-                        continue;
-
-                    if (txtSearch.Text.ToUpper().IndexOf(data.ProductNumber.ToUpper()) >= 0)
-                        bartext = bartext + data.Name;
-                }
-            }
-
-            // ファイル名全体で検索
-            if (bartext.Length <= 0)
-            {
-                string[] arrSearchWord = txtSearch.Text.Split(' ');
-                int Count = arrSearchWord.Length;
-                foreach (MovieFileContents data in listFilesContents)
-                {
-                    int MatchCount = 0;
-                    foreach (string word in arrSearchWord)
-                    {
-                        if (word.Length <= 0)
-                            continue;
-
-                        if (data.Name.ToUpper().IndexOf(word.ToUpper()) >= 0)
-                            MatchCount++;
-                    }
-
-                    // OR検索の場合
-                    if (MatchCount >= 1)
-                        bartext = bartext + data.Name;
-                }
-            }
-
-            txtStatusBar.Text = bartext;
         }
 
         private void btnSearchCancel_Click(object sender, RoutedEventArgs e)
@@ -1093,33 +1025,24 @@ namespace wpfMovieArrangement
                 }
 
                 // HDの場合は、MOVIE_FILESからも一致するデータが存在するかを取得
-                if (dispinfoSelectMovieImportData == null)
+                MovieFileContents contents = ColViewMovieFileContents.MatchProductNumber(importData.ProductNumber);
+
+                if (contents != null)
                 {
-                    foreach (MovieFileContents file in listFilesContents)
-                    {
-                        //string pnum = data.ProductNumber.Replace("-", "");
-                        if (file.ProductNumber.Length <= 0)
-                            continue;
+                    dispinfoSelectMovieImportData = new MovieImportData(contents.Name);
 
-                        if (file.ProductNumber.Equals("SD") || file.ProductNumber.Equals("HD") || file.ProductNumber.Equals("DMM"))
-                            continue;
+                    if (importData.HdKind != null)
+                        dispinfoSelectMovieImportData.Title = dispinfoSelectMovieImportData.Title + " " + importData.HdKind.Name;
+                    else
+                        dispinfoSelectMovieImportData.Title = dispinfoSelectMovieImportData.Title;
 
-                        if (file.ProductNumber.Equals(importData.ProductNumber))
-                        {
-                            dispinfoSelectMovieImportData = new MovieImportData(file.Name);
-
-                            if (importData.HdKind != null)
-                                dispinfoSelectMovieImportData.Title = dispinfoSelectMovieImportData.Title + " " + importData.HdKind.Name;
-                            else
-                                dispinfoSelectMovieImportData.Title = dispinfoSelectMovieImportData.Title;
-
-                            dispinfoSelectMovieImportData.FileId = file.Id;
-                            dispinfoSelectMovieImportData.HdKind = importData.HdKind;
-                            dispinfoSelectMovieImportData.HdFlag = true;
-
-                            break;
-                        }
-                    }
+                    dispinfoSelectMovieImportData.FileId = contents.Id;
+                    dispinfoSelectMovieImportData.HdKind = importData.HdKind;
+                    dispinfoSelectMovieImportData.HdFlag = true;
+                }
+                else
+                {
+                    txtStatusBar.Text = "対象のMOVIE_FILE_CONTENTSは存在しません";
                 }
 
                 txtTitleText.Text = titletext;
@@ -1804,6 +1727,24 @@ namespace wpfMovieArrangement
 
             ColViewFileGeneTargetFiles.FilterSearchProductNumber = txtSearch.Text;
             ColViewFileGeneTargetFiles.Refresh();
+        }
+
+        private void tbtnFileGenHdUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            if (tbtnFileGenHdUpdate.IsChecked != null)
+            {
+                bool updateChecked = (bool)tbtnFileGenHdUpdate.IsChecked;
+
+                if (updateChecked && txtbFileGenFileId.Text.Length <= 0)
+                {
+                    MovieFileContents contents = ColViewMovieFileContents.MatchProductNumber(txtProductNumber.Text);
+
+                    if (contents != null)
+                    {
+                        txtbFileGenFileId.Text = Convert.ToString(contents.Id);
+                    }
+                }
+            }
         }
     }
 }

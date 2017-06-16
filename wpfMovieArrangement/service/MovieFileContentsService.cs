@@ -9,7 +9,7 @@ using System.Data.SqlClient;
 
 namespace wpfMovieArrangement
 {
-    class MovieFileContentsParent
+    class MovieFileContentsService
     {
         public double TotalLength = 0;
         public int FileCount = 0;

@@ -251,7 +251,7 @@
                     <TextBlock Name="txtbFileGenHdKind" Margin="5,5,5,5" FontSize="24" />
                     <TextBlock Name="txtbFileGenHdKindName" Margin="5,5,5,5" FontSize="24" />
                 </WrapPanel>
-                <ToggleButton Name="tbtnFileGenHdUpdate" Content="HDデータ更新" Height="40" Margin="5,5,5,5" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Grid.Row="2" />
+                <ToggleButton Name="tbtnFileGenHdUpdate" Content="HDデータ更新" Height="40" Margin="5,5,5,5" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Grid.Row="2" Click="tbtnFileGenHdUpdate_Click" />
             </Grid>
             <Grid Grid.Row="1">
                 <Grid.Resources>

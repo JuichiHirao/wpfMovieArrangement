@@ -79,7 +79,7 @@ namespace wpfMovieArrangement.service
                 File.Move(sourcePathname, destPathname);
             }
 
-            MovieFileContentsParent parentFileContents = new MovieFileContentsParent();
+            MovieFileContentsService service = new MovieFileContentsService();
 
             myFileContents.Name = myImportData.Filename;
             myFileContents.Size = size;
@@ -100,10 +100,10 @@ namespace wpfMovieArrangement.service
                         delTargetList.Add(targetFiles);
                     }
 
-                    FilesRegisterService service = new FilesRegisterService(dbcon);
-                    service.BasePath = BasePath;
-                    service.SetDbMovieFilesInfo(myImportData);
-                    service.DeleteFiles(delTargetList);
+                    FilesRegisterService serviceFileRegister = new FilesRegisterService(dbcon);
+                    serviceFileRegister.BasePath = BasePath;
+                    serviceFileRegister.SetDbMovieFilesInfo(myImportData);
+                    serviceFileRegister.DeleteFiles(delTargetList);
                 }
                 myFileContents.Extension = ext;
             }
@@ -112,11 +112,11 @@ namespace wpfMovieArrangement.service
             {
                 dbcon.BeginTransaction("MOVIE_REGISTER");
 
-                parentFileContents.DbUpdateFileInfo(myFileContents, dbcon);
+                service.DbUpdateFileInfo(myFileContents, dbcon);
 
                 // MOVIE_IMPORTから削除
-                MovieImportService service = new MovieImportService();
-                service.DbDelete(myImportData, dbcon);
+                MovieImportService serviceImportService = new MovieImportService();
+                serviceImportService.DbDelete(myImportData, dbcon);
 
                 dbcon.CommitTransaction();
             }
