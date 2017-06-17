@@ -812,7 +812,8 @@ namespace wpfMovieArrangement
             DataGrid dgrid = sender as DataGrid;
             TargetFiles file = (TargetFiles)dgrid.SelectedItem;
 
-            Process.Start(file.FileInfo.FullName);
+            if (file != null)
+                Process.Start(file.FileInfo.FullName);
         }
 
         private void Window_SizeChanged_1(object sender, SizeChangedEventArgs e)
@@ -914,7 +915,8 @@ namespace wpfMovieArrangement
 
                 btnExecuteNameChange.Focus();
             }
-            txtbTargetImportId.Text = Convert.ToString(dispinfoSelectMovieImportData.Id);
+
+            txtbTargetIdInfo.Text = Convert.ToString(dispinfoSelectMovieImportData.Id) + "/" + Convert.ToString(dispinfoSelectMovieImportData.FileId);
 
             gridSelectTargetFilename.Visibility = Visibility.Hidden;
         }
@@ -984,7 +986,7 @@ namespace wpfMovieArrangement
                 txtKind.Text = Convert.ToString(importData.Kind);
                 txtFilenameGenDate.Text = importData.ProductDate.ToString("yyyy/MM/dd");
                 txtProductNumber.Text = importData.ProductNumber;
-                txtMaker.Text = importData.Maker;
+                txtMaker.Text = importData.StrMaker;
                 txtTitle.Text = importData.Title;
                 tbtnFileGenHdUpdate.IsChecked = importData.HdFlag;
 
@@ -1031,14 +1033,11 @@ namespace wpfMovieArrangement
                 {
                     dispinfoSelectMovieImportData = new MovieImportData(contents.Name);
 
-                    if (importData.HdKind != null)
-                        dispinfoSelectMovieImportData.Title = dispinfoSelectMovieImportData.Title + " " + importData.HdKind.Name;
-                    else
-                        dispinfoSelectMovieImportData.Title = dispinfoSelectMovieImportData.Title;
-
+                    dispinfoSelectMovieImportData.CopyText = titletext;
                     dispinfoSelectMovieImportData.FileId = contents.Id;
                     dispinfoSelectMovieImportData.HdKind = importData.HdKind;
                     dispinfoSelectMovieImportData.HdFlag = true;
+                    dispinfoSelectMovieImportData.SetPickupTitle();
                 }
                 else
                 {
@@ -1059,59 +1058,53 @@ namespace wpfMovieArrangement
                 }
             }
 
-            MovieFileContents moviefile = new MovieFileContents();
-            moviefile.ParseFromJavSiteText(titletext);
+            if (dispinfoSelectMovieImportData == null)
+                dispinfoSelectMovieImportData = importData;
 
             List<MovieMaker> listMatchMaker;
 
             try
             {
-                listMatchMaker = MovieMakers.GetMatchData(moviefile.EditPasteText, listMakers, moviefile);
+                listMatchMaker = MovieMakers.GetMatchData(dispinfoSelectMovieImportData, listMakers);
+
+                if (listMatchMaker == null || listMatchMaker.Count() <= 0)
+                {
+                    txtStatusBar.Text = "一致するメーカーが存在しませんでした";
+                    dispinfoSelectMovieImportData.SetPickupTitle();
+                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
+                }
+                else if (listMatchMaker.Count() == 1)
+                {
+                    dispinfoSelectMovieImportData.SetMaker(listMatchMaker[0]);
+                    dispinfoSelectMovieImportData.SetPickupTitle();
+                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
+                }
+                else
+                {
+                    dgridMakers.ItemsSource = null;
+                    listMakers = listMatchMaker;
+
+                    dgridMakers.ItemsSource = listMakers;
+
+                    lgridMakers.Visibility = System.Windows.Visibility.Visible;
+
+                    // Autoの設定にする
+                    ScreenDisableBorder.Width = Double.NaN;
+                    ScreenDisableBorder.Height = Double.NaN;
+
+                    isSelectSameMaker = true;
+
+                    return;
+                }
             }
             catch (Exception ex)
             {
+                Debug.Write(ex);
                 MessageBox.Show(ex.Message);
                 return;
             }
 
-            if (listMatchMaker == null || listMatchMaker.Count() <= 0)
-            {
-                txtStatusBar.Text = "一致するメーカーが存在しませんでした";
-                RefrectMakerInfo(moviefile, null, MovieFileContents.KIND_URAAVRIP);
-                return;
-            }
-
-            if (listMatchMaker.Count() == 1)
-            {
-                RefrectMakerInfo(moviefile, listMatchMaker[0], MovieFileContents.KIND_URAAVRIP);
-                if (importData.HdKind != null)
-                {
-                    Regex regex = new Regex(importData.HdKind.StrtRegex);
-                    MatchCollection mc = regex.Matches(txtTitleText.Text);
-                    string title = txtTitle.Text.Replace(mc[0].Value.ToString(), "");
-                    txtTitle.Text = title.Trim() + " " + importData.HdKind.Name;
-                }
-            }
-            else
-            {
-                dgridMakers.ItemsSource = null;
-                listMakers = listMatchMaker;
-
-                dgridMakers.ItemsSource = listMakers;
-
-                lgridMakers.Visibility = System.Windows.Visibility.Visible;
-
-                // Autoの設定にする
-                ScreenDisableBorder.Width = Double.NaN;
-                ScreenDisableBorder.Height = Double.NaN;
-
-                isSelectSameMaker = true;
-
-                return;
-            }
-
-            MovieImportData data = GetImportDataFromUIElement();
-            ColViewFileGeneTargetFiles.FilterSearchProductNumber = data.GetFilterProductNumber();
+            ColViewFileGeneTargetFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFilterProductNumber();
             txtFileGeneSearchText.Text = ColViewFileGeneTargetFiles.FilterSearchProductNumber;
 
             ColViewFileGeneTargetFiles.Refresh();
@@ -1122,11 +1115,9 @@ namespace wpfMovieArrangement
             // 文字列一致のメーカー複数の選択の場合
             if (isSelectSameMaker)
             {
-                MovieFileContents moviefile = new MovieFileContents();
-                moviefile.ParseFromJavSiteText(txtTitleText.Text);
-
-                MovieMaker maker = (MovieMaker)dgridMakers.SelectedItem;
-                RefrectMakerInfo(moviefile, maker, MovieFileContents.KIND_URAAVRIP);
+                dispinfoSelectMovieImportData.Maker = (MovieMaker)dgridMakers.SelectedItem;
+                dispinfoSelectMovieImportData.SetPickupTitle();
+                SetUIElementFromImportData(dispinfoSelectMovieImportData);
 
                 isSelectSameMaker = false;
 
@@ -1136,92 +1127,6 @@ namespace wpfMovieArrangement
                 ButtonMakerClose(null, null);
             }
             isSelectSameMaker = false;
-        }
-
-        private void RefrectMakerInfo(MovieFileContents myMovieFile, MovieMaker myMaker, int myKind)
-        {
-            // クリップボードテキストから不要な削除文字列を設定する
-            List<string> listCutText = new List<string>();
-
-            if (myMaker != null && (myMaker.Kind == 1 || myMaker.Kind == 2))
-                listCutText.Add(myMovieFile.MatchStrProductNumber);
-            else
-            {
-                if (myMaker != null)
-                    listCutText.Add(myMaker.MatchStr);
-            }
-            listCutText.Add(myMovieFile.Remark);
-            listCutText.Add(myMovieFile.MatchStrSellDate);
-            listCutText.Add(myMovieFile.MatchStrActresses);
-            listCutText.Add(myMovieFile.Remark);
-
-            if (myMaker != null && myMaker.MatchProductNumberValue != null && myMaker.MatchProductNumberValue.Length > 0)
-            {
-                listCutText.Add(myMaker.MatchProductNumberValue);
-                txtProductNumber.Text = myMaker.MatchProductNumberValue;
-            }
-            else
-            {
-                txtProductNumber.Text = myMovieFile.ProductNumber;
-            }
-
-            if (myMaker != null)
-            {
-                if (myMovieFile.Kind == myKind)
-                    listCutText.Add(myMaker.Name);
-                else
-                    listCutText.Add(myMaker.MatchStr);
-            }
-
-            if (myMovieFile.SellDate.Year >= 1900)
-                txtFilenameGenDate.Text = myMovieFile.SellDate.ToString("yyyy/MM/dd");
-
-            if (chkActressFixed.IsChecked != null)
-            {
-                bool b = (bool)chkActressFixed.IsChecked;
-
-                if (!b)
-                    txtActresses.Text = myMovieFile.Remark;
-            }
-            else
-                txtActresses.Text = myMovieFile.Remark;
-
-            if (myMaker == null)
-            {
-                myMaker = MovieMakers.GetSearchByProductNumber(myMovieFile.ProductNumber);
-                if (myMaker != null)
-                    txtStatusBar.Text = "MOVIE_FILE_CONTENTSから検索して取得しました";
-            }
-
-            if (myMaker != null)
-            {
-                txtMaker.Text = myMaker.GetNameLabel();
-                txtMatchStr.Text = myMaker.MatchStr;
-                if (chkKindFixed.IsChecked == null || !(bool)chkKindFixed.IsChecked)
-                    txtKind.Text = myMaker.Kind.ToString();
-            }
-
-            string edittext = myMovieFile.EditPasteText;
-            foreach (string cuttext in listCutText)
-            {
-                if (cuttext == null || cuttext.Length <= 0)
-                    continue;
-
-                //edittext = edittext.Replace(cuttext, "");
-                //Debug.Print("edittext 【" + Regex.Escape(edittext) + "】 cuttext【" + Regex.Escape(cuttext) + "】");
-                edittext = Regex.Replace(Regex.Escape(edittext), Regex.Escape(cuttext), "", RegexOptions.IgnoreCase);
-                if (edittext.Substring(0,1).Equals("\\"))
-                    edittext = edittext.Replace("\\", "");
-                //Debug.Print("【" + edittext + "】");
-                edittext = Regex.Unescape(edittext);
-            }
-            myMovieFile.MatchStrProductNumber = "";
-            if (myMovieFile.MatchQuality != null && myMovieFile.MatchQuality.Length > 0)
-                txtTitle.Text = edittext.Trim() + " " + myMovieFile.MatchQuality;
-            else
-                txtTitle.Text = edittext.Trim();
-
-            GenerateFilename(null, null);
         }
 
         private void btnPasteDate_Click(object sender, RoutedEventArgs e)
@@ -1351,7 +1256,7 @@ namespace wpfMovieArrangement
             movieImportData.MatchProduct = txtMatchStr.Text;
             movieImportData.ProductNumber = txtProductNumber.Text;
             movieImportData.StrProductDate = txtFilenameGenDate.Text;
-            movieImportData.Maker = txtMaker.Text;
+            movieImportData.StrMaker = txtMaker.Text;
             movieImportData.Title = txtTitle.Text;
             movieImportData.Actresses = txtActresses.Text;
             movieImportData.HdFlag = tbtnFileGenHdUpdate.IsChecked;
@@ -1375,17 +1280,18 @@ namespace wpfMovieArrangement
 
             txtTitleText.Text = myData.CopyText;
             txtKind.Text = myData.Kind.ToString();
-            txtMatchStr.Text = myData.MatchProduct;
-            txtFilenameGenDate.Text = myData.ProductDate.ToString("yyyy/MM/dd");
+            txtMatchStr.Text = myData.GetMatchMaker();
+            if (myData.ProductDate.Year > 1900)
+                txtFilenameGenDate.Text = myData.ProductDate.ToString("yyyy/MM/dd");
             txtProductNumber.Text = myData.ProductNumber;
-            txtMaker.Text = myData.Maker;
+            txtMaker.Text = myData.StrMaker;
             txtTitle.Text = myData.Title;
             txtActresses.Text = myData.Actresses;
             txtTag.Text = myData.Tag;
             tbtnFileGeneTextAddRar.IsChecked = myData.RarFlag;
             txtFilenameGenerate.Text = myData.Filename;
 
-            if (myData.HdKind != null)
+            if (myData.FileId > 0)
                 tbtnFileGenHdUpdate.IsChecked = true;
         }
 
@@ -1461,10 +1367,8 @@ namespace wpfMovieArrangement
         {
             string ClipboardText = ClipBoardCommon.GetText();
 
-            MovieFileContents moviefile = new MovieFileContents();
-            moviefile.ParseSetActress(ClipboardText);
-
-            txtActresses.Text = moviefile.Remark;
+            txtActresses.Text = dispinfoSelectMovieImportData.ConvertActress(ClipboardText, "、");
+            txtTag.Text = dispinfoSelectMovieImportData.ConvertActress(ClipboardText, ",");
 
             GenerateFilename(null, null);
         }

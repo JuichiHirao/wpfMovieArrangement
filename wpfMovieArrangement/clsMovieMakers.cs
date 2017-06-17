@@ -11,15 +11,15 @@ namespace wpfMovieArrangement
 {
     class MovieMakers
     {
-        public static List<MovieMaker> GetMatchData(string myText, List<MovieMaker> myListMakers, MovieFileContents myFileContents)
+        public static List<MovieMaker> GetMatchData(MovieImportData myImportData, List<MovieMaker> myListMakers)
         {
             List<MovieMaker> listMatchMaker = null;
 
             // 品番っぽい文字列が存在する場合
             //if (myFileContents.Kind == MovieFileContents.KIND_AVRIP)
-            if (myFileContents.ProductNumber != null && myFileContents.ProductNumber.Length > 0)
+            if (myImportData.ProductNumber != null && myImportData.ProductNumber.Length > 0)
             {
-                string[] label = myFileContents.ProductNumber.Split('-');
+                string[] label = myImportData.ProductNumber.Split('-');
                 var matchdata = from makerdata in myListMakers
                                 where makerdata.MatchStr.ToUpper() == label[0].ToUpper() // + '-'
                                     && makerdata.MatchProductNumber.Length <= 0
@@ -42,14 +42,14 @@ namespace wpfMovieArrangement
                         continue;
 
                     Regex regex = new Regex(makerdata.MatchStr, RegexOptions.IgnoreCase);
-                    if (regex.IsMatch(myText))
+                    if (regex.IsMatch(myImportData.CopyText))
                     {
                         try
                         {
                             Regex regexPN = new Regex(makerdata.MatchProductNumber);
-                            if (regexPN.IsMatch(myText))
+                            if (regexPN.IsMatch(myImportData.CopyText))
                             {
-                                makerdata.MatchProductNumberValue = regexPN.Match(myText).Value;
+                                makerdata.MatchProductNumberValue = regexPN.Match(myImportData.CopyText).Value;
                                 if (listMatchMaker == null)
                                     listMatchMaker = new List<MovieMaker>();
 

@@ -50,7 +50,7 @@ namespace wpfMovieArrangement.service
             listSqlParams.Add(sqlparam);
 
             sqlparam = new SqlParameter("@Maker", SqlDbType.VarChar);
-            sqlparam.Value = myData.Maker;
+            sqlparam.Value = myData.GetMaker();
             listSqlParams.Add(sqlparam);
 
             sqlparam = new SqlParameter("@Title", SqlDbType.VarChar);
@@ -255,7 +255,7 @@ namespace wpfMovieArrangement.service
                     newestData.MatchProduct = DbExportCommon.GetDbString(reader, 3);
                     newestData.ProductNumber = DbExportCommon.GetDbString(reader, 4);
                     newestData.ProductDate = DbExportCommon.GetDbDateTime(reader, 5);
-                    newestData.Maker = DbExportCommon.GetDbString(reader, 6);
+                    newestData.StrMaker = DbExportCommon.GetDbString(reader, 6);
                     newestData.Title = DbExportCommon.GetDbString(reader, 7);
                     newestData.Actresses = DbExportCommon.GetDbString(reader, 8);
                     newestData.RarFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 9));
@@ -317,7 +317,7 @@ namespace wpfMovieArrangement.service
                         data.MatchProduct = DbExportCommon.GetDbString(reader, 3);
                         data.ProductNumber = DbExportCommon.GetDbString(reader, 4);
                         data.ProductDate = DbExportCommon.GetDbDateTime(reader, 5);
-                        data.Maker = DbExportCommon.GetDbString(reader, 6);
+                        data.StrMaker = DbExportCommon.GetDbString(reader, 6);
                         data.Title = DbExportCommon.GetDbString(reader, 7);
                         data.Actresses = DbExportCommon.GetDbString(reader, 8);
                         data.RarFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 9));

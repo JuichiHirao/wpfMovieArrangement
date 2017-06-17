@@ -72,7 +72,37 @@ namespace wpfMovieArrangement
         }
         public DateTime ProductDate{ get; set; }
 
-        public string Maker { get; set; }
+        public string StrMaker { get; set; }
+
+        public MovieMaker Maker { get; set; }
+
+        public void SetMaker(MovieMaker myMaker)
+        {
+            if (myMaker != null)
+            {
+                Kind = myMaker.Kind;
+                StrMaker = myMaker.GetNameLabel();
+            }
+        }
+
+        public string GetMaker()
+        {
+            if (Maker != null)
+                return Maker.GetNameLabel();
+
+            return StrMaker;
+        }
+
+        public string GetMatchMaker()
+        {
+            if (Maker != null)
+                return Maker.MatchStr;
+
+            if (ProductNumber != null)
+                return Regex.Replace(ProductNumber, "-.*", "");
+
+            return "";
+        }
 
         public string Title { get; set; }
 
@@ -161,7 +191,15 @@ namespace wpfMovieArrangement
             else if (Kind == 5)
                 name += "[DMMR-IVRIP]";
 
-            name += "【" + Maker + "】";
+            string maker = "";
+            if (Maker != null)
+            {
+                maker = Maker.GetNameLabel();
+            }
+            else
+                maker = StrMaker;
+
+            name += "【" + maker + "】";
             name += Title + " ";
             name += "[" + ProductNumber + " " + strDt + "]";
             if (Actresses.Trim().Length > 0)
@@ -247,7 +285,10 @@ namespace wpfMovieArrangement
                 int posFrom = pasteText.IndexOf("【");
                 int posTo = pasteText.IndexOf("】");
                 if (posFrom >= 0)
-                    Maker = pasteText.Substring(posFrom+1, (posTo - posFrom)-1);
+                {
+                    StrMaker = pasteText.Substring(posFrom + 1, (posTo - posFrom) - 1);
+                    Maker = null;
+                }
 
                 Title = pasteText.Substring(posTo+1, (lastPos - posTo)-1).Trim();
 
@@ -259,8 +300,52 @@ namespace wpfMovieArrangement
             return;
         }
 
+        private string RemoveTextBefore(string myText)
+        {
+            return Regex.Replace(CopyText, ".*" + Regex.Escape(myText), "", RegexOptions.IgnoreCase).Trim();
+        }
+
+        private string RemoveTextAfterDate(string myText)
+        {
+            string dateSprintString = Regex.Escape("/-");
+            return Regex.Replace(myText, " " + "[12][[0123][0-9][0-9][" + dateSprintString + "][0-1][0-9][" + dateSprintString + "][0-3][0-9].*", "").Trim();
+        }
+
+        public void SetPickupTitle()
+        {
+            string workCopyText = CopyText;
+            // クリップボードテキストから不要な削除文字列を設定する
+            List<string> listCutText = new List<string>();
+
+            if (ProductNumber != null && ProductNumber.Length > 0)
+                workCopyText = RemoveTextBefore(ProductNumber);
+
+            if (ProductDate.Year <= 1900)
+                ParseSetSellDate(CopyText);
+
+            if (ProductDate.Year > 1900)
+                workCopyText = RemoveTextAfterDate(workCopyText);
+
+            foreach (HdInfo data in HdKindList)
+            {
+                Regex regex = new Regex(data.Name + "$");
+                if (regex.IsMatch(workCopyText.Trim()))
+                {
+                    foreach (Match m in regex.Matches(workCopyText))
+                        workCopyText = workCopyText.Replace(m.Value.ToString(), "");
+                }
+            }
+
+            string hd = "";
+            if (HdKind != null)
+                hd = " " + HdKind.Name;
+
+            Title = workCopyText + hd;
+        }
+
         public void ParseFromPasteText(string myPasteText)
         {
+            CopyText = myPasteText;
             string editText = "";
             Regex regexHd = null;
             HdInfo matchHdInfo = null;
@@ -298,7 +383,7 @@ namespace wpfMovieArrangement
 
         public string ParseSetSellDate(string myText)
         {
-            if (myText == null || myText.Length > 0)
+            if (myText == null || myText.Length <= 0)
                 return "";
 
             Regex regexDate = new Regex("[12][0-9][0-9][0-9][/-][0-1]{0,1}[0-9][/-][0-9]{0,1}[0-9]");
@@ -329,7 +414,8 @@ namespace wpfMovieArrangement
                 matchStr = matchStr.Replace(myMatchProductDate, "").Trim();
             }
 
-            //Remark = ConvertActress(matchStr);
+            Actresses = ConvertActress(matchStr, "、");
+            Tag = ConvertActress(matchStr, ",");
         }
 
         public void ParseSetProductNumber(string myText)
@@ -362,12 +448,18 @@ namespace wpfMovieArrangement
                     ProductNumber = matchStr;
             }
         }
-        private string ConvertActress(string myText)
+        public string ConvertActress(string myText, string mySeparator)
         {
             string[] arrSplit = { " ", ",", "／" };
             string sepa = "";
             string[] arrActress = null;
             string actresses = "";
+
+            string separetor = "";
+            if (mySeparator == null || mySeparator.Length <= 0)
+                separetor = "、";
+            else
+                separetor = mySeparator;
 
             foreach (string split in arrSplit)
             {
@@ -387,7 +479,7 @@ namespace wpfMovieArrangement
                 foreach (string actress in arrActress)
                 {
                     if (actresses.Length > 0)
-                        actresses += "、";
+                        actresses += separetor;
                     actresses += actress;
                 }
             }

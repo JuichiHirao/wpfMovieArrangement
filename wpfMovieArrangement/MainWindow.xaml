@@ -154,7 +154,7 @@
                     <DataGridTextColumn Header="結果" Binding="{Binding Path=Message}" FontSize="9" />
                 </DataGrid.Columns>
             </DataGrid>
-            <TextBlock Name="txtbTargetImportId" Width="30" Margin="5,5,5,5" HorizontalAlignment="Left" FontSize="11" TextWrapping="Wrap" Grid.Row="3" />
+            <TextBlock Name="txtbTargetIdInfo" Width="30" Margin="5,5,5,5" HorizontalAlignment="Left" FontSize="11" TextWrapping="Wrap" Grid.Row="3" />
             <TextBlock Name="txtbSourceFilename" Margin="45,5,5,5" FontSize="11" TextWrapping="Wrap" Grid.Row="3" />
             <Grid Name="lgridDateCopyDestination" Margin="15,3,15,3" Grid.Row="4">
                 <Button Name="btnPasteDestination" Content="日付コピー先ファイル貼付" Margin="5,0" Click="btnPasteDestination_Click" />
@@ -251,7 +251,10 @@
                     <TextBlock Name="txtbFileGenHdKind" Margin="5,5,5,5" FontSize="24" />
                     <TextBlock Name="txtbFileGenHdKindName" Margin="5,5,5,5" FontSize="24" />
                 </WrapPanel>
-                <ToggleButton Name="tbtnFileGenHdUpdate" Content="HDデータ更新" Height="40" Margin="5,5,5,5" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Grid.Row="2" Click="tbtnFileGenHdUpdate_Click" />
+                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Grid.Row="2">
+                    <ToggleButton Name="tbtnFileGeneTextAddRar" Content="RAR" Height="40" Width="100" Margin="5,5,5,5" />
+                    <ToggleButton Name="tbtnFileGenHdUpdate" Content="HDデータ更新" Height="40" Width="100" Margin="35,5,5,5" Click="tbtnFileGenHdUpdate_Click" />
+                </WrapPanel>
             </Grid>
             <Grid Grid.Row="1">
                 <Grid.Resources>
@@ -323,7 +326,6 @@
                         <CheckBox Name="chkActressFixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
                         <Button Name="btnClearActress" Content="クリア" Click="btnClearActress_Click" />
                     </WrapPanel>
-                    <ToggleButton Name="tbtnFileGeneTextAddRar" Content="RAR" Width="60" HorizontalAlignment="Right" />
                 </Grid>
                 <Grid Grid.Row="6">
                     <Grid.ColumnDefinitions>
