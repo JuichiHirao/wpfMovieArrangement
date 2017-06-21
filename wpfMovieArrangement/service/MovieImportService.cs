@@ -147,7 +147,7 @@ namespace wpfMovieArrangement.service
             listSqlParams.Add(sqlparam);
 
             sqlparam = new SqlParameter("@Maker", SqlDbType.VarChar);
-            sqlparam.Value = myData.Maker;
+            sqlparam.Value = myData.StrMaker;
             listSqlParams.Add(sqlparam);
 
             sqlparam = new SqlParameter("@Title", SqlDbType.VarChar);

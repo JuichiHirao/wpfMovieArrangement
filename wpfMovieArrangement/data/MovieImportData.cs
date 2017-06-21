@@ -79,9 +79,29 @@ namespace wpfMovieArrangement
         public void SetMaker(MovieMaker myMaker)
         {
             if (myMaker != null)
+                Maker = myMaker;
+
+            if (Maker != null)
             {
-                Kind = myMaker.Kind;
-                StrMaker = myMaker.GetNameLabel();
+                Kind = Maker.Kind;
+                StrMaker = Maker.GetNameLabel();
+            }
+        }
+
+        /// <summary>
+        /// KINDが1以外でProductNumberが取得できなかった場合に、メーカーが取得出来た場合に本メソッドを実行してCopyTextからProductNumberを取り出す
+        /// </summary>
+        public void SetProductNumber()
+        {
+            if (Maker != null)
+            {
+                Regex regex = new Regex(Maker.MatchProductNumber);
+
+                foreach(Match m in regex.Matches(CopyText))
+                {
+                    ProductNumber = m.Value;
+                    break;
+                }
             }
         }
 
@@ -427,6 +447,8 @@ namespace wpfMovieArrangement
             if (regex.IsMatch(myText))
             {
                 matchStr = regex.Match(myText).Value.ToString();
+                if (matchStr.Equals("S-C"))
+                    matchStr = "";
                 ProductNumber = matchStr.Replace("[", "").Replace("]", "").ToUpper();
             }
             // 品番っぽいのが無い場合は、数字のみで品番を取得

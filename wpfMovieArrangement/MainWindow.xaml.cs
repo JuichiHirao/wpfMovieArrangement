@@ -29,9 +29,6 @@ namespace wpfMovieArrangement
         public readonly static RoutedCommand CahngeModeFilenameGenerate = new RoutedCommand("CahngeModeFilenameGenerate", typeof(MainWindow));
         public readonly static RoutedCommand CahngeModeKoreanPorno = new RoutedCommand("CahngeModeKoreanPorno", typeof(MainWindow));
 
-        private List<MovieMaker> listMakers = null;
-        ICollectionView ColViewListMakers;
-        private int MaxListMakers = 0;
         //private List<MovieFileContents> listFilesContents = null;
         private List<MovieImportData> listImportTarget = null;
 
@@ -40,6 +37,7 @@ namespace wpfMovieArrangement
         private collection.FileGeneTargetFilesCollection ColViewFileGeneTargetFiles;
         private collection.FileGeneTargetFilesCollection ColViewArrangementTarget; // dgridArrangementTarget
         private collection.FileGeneTargetFilesCollection ColViewDestFiles; // dgridDestFile
+        private collection.MakerCollection ColViewMaker;
 
         private List<MovieMaker> dispinfoSelectDataGridMakers = null;
         private List<KoreanPornoData> dispinfoSelectDataGridKoreanPorno = null;
@@ -143,9 +141,6 @@ namespace wpfMovieArrangement
             CommandBindings.Add(new CommandBinding(CahngeModeKoreanPorno, (s, ea) => { CahngeModeKoreanPornoExecute(s, ea); }, (s, ea) => ea.CanExecute = true));
             CommandBindings.Add(new CommandBinding(PasteDateCopy, (s, ea) => { PasteDateCopyExecute(s, ea); }, (s, ea) => ea.CanExecute = true));
 
-            listMakers = MovieMakers.GetAllData();
-            MaxListMakers = listMakers.Count();
-
             dispctrlMode = MODE_NORMALMOVIE;
         }
 
@@ -173,6 +168,8 @@ namespace wpfMovieArrangement
             ColViewDestFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
 
             ColViewMovieFileContents = new collection.MovieFileContentsCollection();
+
+            ColViewMaker = new collection.MakerCollection();
 
             dgridCheckExistFiles.ItemsSource = ColViewFileGeneTargetFiles.ColViewListTargetFiles;
             dgridArrangementTarget.ItemsSource = ColViewArrangementTarget.ColViewListTargetFiles;
@@ -971,6 +968,7 @@ namespace wpfMovieArrangement
                 }
                 return;
             }
+            dispinfoSelectMovieImportData = null;
             ClearUIElement();
             txtTitleText.Text = titletext;
 
@@ -1002,21 +1000,24 @@ namespace wpfMovieArrangement
 
             txtStatusBar.Text = "";
 
-            if (MaxListMakers > listMakers.Count())
-            {
-                listMakers = MovieMakers.GetAllData();
-                MaxListMakers = listMakers.Count();
-            }
-
             importData = new MovieImportData();
             // メーカー情報と合わせるための製品番号、HDかどうかの情報をParse
             importData.ParseFromPasteText(titletext);
 
+            List<MovieMaker> listMatchMaker = ColViewMaker.GetMatchData(importData);
+
+            if (importData.ProductNumber == null || importData.ProductNumber.Length <= 0)
+            {
+                if (listMatchMaker.Count == 1)
+                {
+                    importData.SetMaker(listMatchMaker[0]);
+                    importData.SetProductNumber();
+                }
+            }
+
             if (importData.ProductNumber != null && importData.ProductNumber.Length > 0)
             {
-                dispinfoSelectMovieImportData = null;
-
-                // MOVIE_IMPORT_DATAに既存が存在する場合は、それを表示
+                // MOVIE_IMPORT_DATAに既存にデータがが存在すれば表示
                 foreach(MovieImportData imp in listImportTarget)
                 {
                     if (imp.ProductNumber.Equals(importData.ProductNumber))
@@ -1037,6 +1038,7 @@ namespace wpfMovieArrangement
                     dispinfoSelectMovieImportData.FileId = contents.Id;
                     dispinfoSelectMovieImportData.HdKind = importData.HdKind;
                     dispinfoSelectMovieImportData.HdFlag = true;
+                    dispinfoSelectMovieImportData.Tag = contents.Tag;
                     dispinfoSelectMovieImportData.SetPickupTitle();
                 }
                 else
@@ -1061,11 +1063,9 @@ namespace wpfMovieArrangement
             if (dispinfoSelectMovieImportData == null)
                 dispinfoSelectMovieImportData = importData;
 
-            List<MovieMaker> listMatchMaker;
-
             try
             {
-                listMatchMaker = MovieMakers.GetMatchData(dispinfoSelectMovieImportData, listMakers);
+                //listMatchMaker = MovieMakers.GetMatchData(dispinfoSelectMovieImportData, listMakers);
 
                 if (listMatchMaker == null || listMatchMaker.Count() <= 0)
                 {
@@ -1082,9 +1082,7 @@ namespace wpfMovieArrangement
                 else
                 {
                     dgridMakers.ItemsSource = null;
-                    listMakers = listMatchMaker;
-
-                    dgridMakers.ItemsSource = listMakers;
+                    dgridMakers.ItemsSource = listMatchMaker;
 
                     lgridMakers.Visibility = System.Windows.Visibility.Visible;
 
@@ -1115,7 +1113,7 @@ namespace wpfMovieArrangement
             // 文字列一致のメーカー複数の選択の場合
             if (isSelectSameMaker)
             {
-                dispinfoSelectMovieImportData.Maker = (MovieMaker)dgridMakers.SelectedItem;
+                dispinfoSelectMovieImportData.SetMaker((MovieMaker)dgridMakers.SelectedItem);
                 dispinfoSelectMovieImportData.SetPickupTitle();
                 SetUIElementFromImportData(dispinfoSelectMovieImportData);
 
@@ -1145,7 +1143,7 @@ namespace wpfMovieArrangement
             ScreenDisableBorder.Width = Double.NaN;
             ScreenDisableBorder.Height = Double.NaN;
 
-            dgridMakers.ItemsSource = listMakers;
+            dgridMakers.ItemsSource = ColViewMaker.ColViewListMakers;
         }
 
         private void ButtonMakerClose(object sender, RoutedEventArgs e)
@@ -1185,8 +1183,7 @@ namespace wpfMovieArrangement
             lgridRegistMaker.Visibility = System.Windows.Visibility.Collapsed;
 
             dgridMakers.ItemsSource = null;
-            listMakers = null;
-            listMakers = MovieMakers.GetAllData();
+            ColViewMaker.Refresh();
 
             txtRegistId.Text = "";
             txtRegistMakerName.Text = "";
@@ -1195,7 +1192,7 @@ namespace wpfMovieArrangement
             txtRegistMakerMatchStr.Text = "";
             txtRegistMatchProductNumber.Text = "";
 
-            dgridMakers.ItemsSource = listMakers;
+            dgridMakers.ItemsSource = ColViewMaker.ColViewListMakers;
 
             return;
         }
@@ -1480,123 +1477,23 @@ namespace wpfMovieArrangement
         {
             if (sender is Button)
             {
-                ColViewListMakers.Filter = null;
                 chkKindOne.IsChecked = false;
                 chkKindTwo.IsChecked = false;
                 chkKindThree.IsChecked = false;
                 return;
             }
 
-            bool one = false, two = false, three = false;
-            ColViewListMakers = CollectionViewSource.GetDefaultView(listMakers);
+            List<int> intList = new List<int>();
+
             if (chkKindOne.IsChecked != null)
-                one = (bool)chkKindOne.IsChecked;
+                intList.Add(1);
             if (chkKindTwo.IsChecked != null)
-                two = (bool)chkKindTwo.IsChecked;
+                intList.Add(2);
             if (chkKindThree.IsChecked != null)
-                three = (bool)chkKindThree.IsChecked;
+                intList.Add(3);
 
-            string search = txtMakersSearch.Text;
-            try
-            {
-                Regex regex = new Regex(search, RegexOptions.IgnoreCase);
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-                return;
-            }
-
-            string[] arrSearchAnd, arrSearchOr = null;
-            bool IsSearchAnd = false, IsSearchOr = false;
-            arrSearchAnd = search.Split(' ');
-
-            if (arrSearchAnd.Length >= 2)
-            {
-                int cnt = 0;
-                foreach (string str in arrSearchAnd)
-                {
-                    if (str != null && str.Length > 0)
-                        cnt++;
-                }
-                if (cnt > 1)
-                    IsSearchAnd = true;
-            }
-            else
-            {
-                arrSearchOr = search.Split(',');
-
-                if (arrSearchOr.Length >= 2)
-                {
-                    int cnt = 0;
-                    foreach (string str in arrSearchOr)
-                    {
-                        if (str != null && str.Length > 0)
-                            cnt++;
-                    }
-                    if (cnt > 1)
-                        IsSearchOr = true;
-                }
-
-            }
-
-            int matchCnt = 0;
-            ColViewListMakers.Filter = delegate (object o)
-            {
-                MovieMaker data = o as MovieMaker;
-
-                if (search.Length > 0)
-                {
-                    if (IsSearchAnd)
-                    {
-                        matchCnt = 0;
-                        foreach (string str in arrSearchAnd)
-                        {
-                            if (data.Name.ToUpper().IndexOf(str) >= 0
-                                || data.Label.ToUpper().IndexOf(str) >= 0)
-                                matchCnt++;
-                        }
-
-                        if (arrSearchAnd.Length == matchCnt)
-                            return true;
-
-                        return false;
-                    }
-                    else if (IsSearchOr)
-                    {
-                        foreach (string str in arrSearchOr)
-                        {
-                            if (data.Name.ToUpper().IndexOf(str) >= 0
-                            || data.Label.ToUpper().IndexOf(str) >= 0)
-                                return true;
-                        }
-
-                        return false;
-                    }
-                    else
-                    {
-                        if (data.Name.ToUpper().IndexOf(search.ToUpper()) >= 0
-                            || data.Label.ToUpper().IndexOf(search.ToUpper()) >= 0)
-                            return true;
-
-                        return false;
-                    }
-
-                    return false;
-                }
-
-                int kind = data.Kind;
-                if (one && kind == 1)
-                    return true;
-                if (two && kind == 2)
-                    return true;
-                if (three && kind == 3)
-                    return true;
-
-                if (!one && !two && !three)
-                    return true;
-                return false;
-            };
+            ColViewMaker.SetCondition(intList.ToArray(), txtMakersSearch.Text);
+            ColViewMaker.Execute();
         }
 
         private void btnClearActress_Click(object sender, RoutedEventArgs e)
@@ -1649,6 +1546,12 @@ namespace wpfMovieArrangement
                     }
                 }
             }
+        }
+
+        private void btnFileGenClearFileId_Click(object sender, RoutedEventArgs e)
+        {
+            txtbFileGenFileId.Text = "";
+            tbtnFileGenHdUpdate.IsChecked = false;
         }
     }
 }
