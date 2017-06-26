@@ -205,8 +205,34 @@ namespace wpfMovieArrangement.service
                 Debug.Write(ex);
                 dbcon.RollbackTransaction();
                 throw new Exception(ex.Message);
+            }
+        }
 
-                return;
+        /// <summary>
+        /// 全削除ボタンを押下された場合に実行、dgridDestFileファイルの削除、MOVIE_IMPORT_DATAのDb削除を行う
+        /// </summary>
+        public void DeleteExecute(List<TargetFiles> myListTargetFiles)
+        {
+            if (targetImportData == null)
+                throw new Exception("targetImportDataが設定されていません");
+
+            try
+            {
+                dbcon.BeginTransaction("MOVIE_REGISTER");
+
+                // MOVIE_IMPORTから削除
+                MovieImportService service = new MovieImportService();
+                service.DbDelete(targetImportData, dbcon);
+
+                DeleteFiles(myListTargetFiles);
+
+                dbcon.CommitTransaction();
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+                dbcon.RollbackTransaction();
+                throw new Exception(ex.Message);
             }
         }
 
@@ -256,50 +282,53 @@ namespace wpfMovieArrangement.service
         {
             if (targetImportData.RarFlag == true)
             {
-                // ソースファイルのパターンマッチする全ファイルをゴミ箱に移動
-                string patternStr = SourceFile.FileInfo.Name.Replace("part1", "part*");
-                string[] MatchFiles = Directory.GetFiles(BasePath, patternStr, System.IO.SearchOption.TopDirectoryOnly);
-
-                // ネットワーク経由のパスの場合はゴミ箱でなく「DELETE」フォルダに移動
-                if (BasePath.IndexOf("\\") == 0)
-                {
-                    if (MatchFiles != null)
-                    {
-                        string DeleteDir = System.IO.Path.Combine(BasePath, "DELETE");
-
-                        if (!System.IO.File.Exists(DeleteDir))
-                            System.IO.Directory.CreateDirectory(DeleteDir);
-
-                        Debug.Print("Source Name [" + SourceFile.Name + "] --> [" + DeleteDir + "]");
-
-                        foreach (string file in MatchFiles)
-                        {
-                            Debug.Print("DELETEフォルダ移動 [" + file + "]");
-                            string DestPathname = System.IO.Path.Combine(DeleteDir, new FileInfo(file).Name);
-
-                            System.IO.File.Move(file, DestPathname);
-                            //FileSystem.DeleteFile(
-                            //    file,
-                            //    UIOption.OnlyErrorDialogs,
-                            //    RecycleOption.SendToRecycleBin);
-                        }
-                    }
-                }
-                else
+                if (SourceFile != null && SourceFile.FileInfo != null)
                 {
                     // ソースファイルのパターンマッチする全ファイルをゴミ箱に移動
-                    Debug.Print("Source Name [" + SourceFile.Name + "]");
+                    string patternStr = SourceFile.FileInfo.Name.Replace("part1", "part*");
+                    string[] MatchFiles = Directory.GetFiles(BasePath, patternStr, System.IO.SearchOption.TopDirectoryOnly);
 
-                    if (MatchFiles != null)
+                    // ネットワーク経由のパスの場合はゴミ箱でなく「DELETE」フォルダに移動
+                    if (BasePath.IndexOf("\\") == 0)
                     {
-                        foreach (string file in MatchFiles)
+                        if (MatchFiles != null)
                         {
-                            Debug.Print("ゴミ箱移動 [" + file + "]");
+                            string DeleteDir = System.IO.Path.Combine(BasePath, "DELETE");
 
-                            FileSystem.DeleteFile(
-                                file,
-                                UIOption.OnlyErrorDialogs,
-                                RecycleOption.SendToRecycleBin);
+                            if (!System.IO.File.Exists(DeleteDir))
+                                System.IO.Directory.CreateDirectory(DeleteDir);
+
+                            Debug.Print("Source Name [" + SourceFile.Name + "] --> [" + DeleteDir + "]");
+
+                            foreach (string file in MatchFiles)
+                            {
+                                Debug.Print("DELETEフォルダ移動 [" + file + "]");
+                                string DestPathname = System.IO.Path.Combine(DeleteDir, new FileInfo(file).Name);
+
+                                System.IO.File.Move(file, DestPathname);
+                                //FileSystem.DeleteFile(
+                                //    file,
+                                //    UIOption.OnlyErrorDialogs,
+                                //    RecycleOption.SendToRecycleBin);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // ソースファイルのパターンマッチする全ファイルをゴミ箱に移動
+                        Debug.Print("Source Name [" + SourceFile.Name + "]");
+
+                        if (MatchFiles != null)
+                        {
+                            foreach (string file in MatchFiles)
+                            {
+                                Debug.Print("ゴミ箱移動 [" + file + "]");
+
+                                FileSystem.DeleteFile(
+                                    file,
+                                    UIOption.OnlyErrorDialogs,
+                                    RecycleOption.SendToRecycleBin);
+                            }
                         }
                     }
                 }

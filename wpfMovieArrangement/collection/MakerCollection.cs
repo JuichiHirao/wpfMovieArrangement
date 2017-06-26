@@ -86,10 +86,9 @@ namespace wpfMovieArrangement.collection
                         matchMakerList.Add(m);
                 }
             }
-            else
-            {
+
+            if (matchMakerList.Count <= 0)
                 matchMakerList = MatchData(myImportData.CopyText);
-            }
 
             return matchMakerList;
         }

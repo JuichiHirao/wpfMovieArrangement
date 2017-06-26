@@ -532,6 +532,26 @@ namespace wpfMovieArrangement
             return null;
         }
 
+        private void btnExecuteDelete_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show("MOVIE_IMPORT_DATAから削除して、削除選択されたファイルをゴミ箱へ移していいですか？", "削除確認", MessageBoxButton.OKCancel);
+
+            if (result == MessageBoxResult.Cancel)
+                return;
+
+            FilesRegisterService service = new FilesRegisterService(new DbConnection());
+
+            service.targetImportData = dispinfoSelectMovieImportData;
+            service.DeleteExecute(ColViewDestFiles.listTargetFiles);
+
+            service.MovieImportService serviceImport = new service.MovieImportService();
+            listImportTarget = serviceImport.GetList(new DbConnection());
+
+            txtChangeFileName.Text = "";
+            txtbTag.Text = "";
+            txtSearch.Text = "";
+        }
+
         private void btnExecuteNameChange_Click(object sender, RoutedEventArgs e)
         {
             if (dispctrlMode == MODE_DATECOPY)
@@ -675,7 +695,7 @@ namespace wpfMovieArrangement
             listImportTarget = serviceImport.GetList(new DbConnection());
 
             txtChangeFileName.Text = "";
-            txtChangeTag.Text = "";
+            txtbTag.Text = "";
             txtSearch.Text = "";
         }
 
@@ -863,6 +883,8 @@ namespace wpfMovieArrangement
                 txtbSourceFilename.Text = dispinfoSelectMovieImportData.Filename;
                 txtChangeFileName.Text = dispinfoSelectMovieImportData.Filename;
 
+                MovieFileContents matchFileContents = ColViewMovieFileContents.MatchProductNumber(dispinfoSelectMovieImportData.ProductNumber);
+
                 if ((bool)dispinfoSelectMovieImportData.RarFlag)
                 {
                     ChangeModeNormalRarExecute(null, null);
@@ -898,13 +920,28 @@ namespace wpfMovieArrangement
                             return;
                         }
                     }
+
                     ChangeModeNormalMovieExecute(null, null);
                 }
 
-                if (dispinfoSelectMovieImportData.FileId > 0)
-                    txtChangeTag.Background = new SolidColorBrush(Colors.PaleGreen);
+                if (matchFileContents != null)
+                {
+                    MovieImportData impData = new MovieImportData(matchFileContents.Name);
+                    txtbExistFileId.Text = Convert.ToString(matchFileContents.Id);
+                    txtbExistTitle.Text = impData.Title;
+                }
                 else
-                    txtChangeTag.Background = null;
+                {
+                    txtbExistFileId.Text = "";
+                    txtbExistTitle.Text = "";
+                }
+
+                if (dispinfoSelectMovieImportData.FileId > 0)
+                    txtbTag.Background = new SolidColorBrush(Colors.PaleGreen);
+                else
+                    txtbTag.Background = null;
+
+                txtbTag.Text = dispinfoSelectMovieImportData.Tag;
 
                 lgridMain.Visibility = System.Windows.Visibility.Visible;
 
@@ -957,17 +994,21 @@ namespace wpfMovieArrangement
 
             if (titletext.Trim().Length <= 10)
             {
+                bool isDate = false;
                 try
                 {
                     DateTime dt = Convert.ToDateTime(titletext);
                     txtFilenameGenDate.Text = dt.ToString("yyyy/MM/dd");
+                    isDate = true;
                 }
                 catch(Exception)
                 {
 
                 }
-                return;
+                if (isDate)
+                    return;
             }
+
             dispinfoSelectMovieImportData = null;
             ClearUIElement();
             txtTitleText.Text = titletext;
@@ -995,7 +1036,7 @@ namespace wpfMovieArrangement
                 ColViewFileGeneTargetFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFilterProductNumber();
                 ColViewFileGeneTargetFiles.Refresh();
 
-                return;
+                //return;
             }
 
             txtStatusBar.Text = "";
@@ -1039,7 +1080,7 @@ namespace wpfMovieArrangement
                     dispinfoSelectMovieImportData.HdKind = importData.HdKind;
                     dispinfoSelectMovieImportData.HdFlag = true;
                     dispinfoSelectMovieImportData.Tag = contents.Tag;
-                    dispinfoSelectMovieImportData.SetPickupTitle();
+                    dispinfoSelectMovieImportData.SetPickupTitle(contents);
                 }
                 else
                 {

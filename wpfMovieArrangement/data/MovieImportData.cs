@@ -14,9 +14,10 @@ namespace wpfMovieArrangement
         private void SetHdInfo()
         {
             HdKindList.Add(new HdInfo(1, "60fps HD", "\\[FHD60fps\\]"));
-            HdKindList.Add(new HdInfo(2, "FHD", "\\[FHD\\]"));
-            HdKindList.Add(new HdInfo(3, "FHD", "FHD"));
-            HdKindList.Add(new HdInfo(4, "HD", "\\[HD\\]"));
+            HdKindList.Add(new HdInfo(2, "60fps HD", "FHD60fps"));
+            HdKindList.Add(new HdInfo(3, "FHD", "\\[FHD\\]"));
+            HdKindList.Add(new HdInfo(4, "FHD", "FHD"));
+            HdKindList.Add(new HdInfo(5, "HD", "\\[HD\\]"));
         }
         public class HdInfo
         {
@@ -331,6 +332,36 @@ namespace wpfMovieArrangement
             return Regex.Replace(myText, " " + "[12][[0123][0-9][0-9][" + dateSprintString + "][0-1][0-9][" + dateSprintString + "][0-3][0-9].*", "").Trim();
         }
 
+        public void SetPickupTitle(MovieFileContents myFileContents)
+        {
+            MovieImportData impData = new MovieImportData(myFileContents.Name);
+
+            string workCopyText = "";
+            // クリップボードテキストから不要な削除文字列を設定する
+            List<string> listCutText = new List<string>();
+
+            ProductNumber = impData.ProductNumber;
+
+            foreach (HdInfo data in HdKindList)
+            {
+                Regex regex = new Regex(data.Name + "$");
+                if (regex.IsMatch(workCopyText.Trim()))
+                {
+                    foreach (Match m in regex.Matches(workCopyText))
+                        workCopyText = impData.Title.Replace(m.Value.ToString(), "");
+                }
+            }
+
+            string hd = "";
+            if (HdKind != null)
+                hd = " " + HdKind.Name;
+
+            if (workCopyText.Length > 0)
+                Title = workCopyText + hd;
+            else
+                Title = impData.Title + hd;
+        }
+
         public void SetPickupTitle()
         {
             string workCopyText = CopyText;
@@ -368,7 +399,6 @@ namespace wpfMovieArrangement
             CopyText = myPasteText;
             string editText = "";
             Regex regexHd = null;
-            HdInfo matchHdInfo = null;
             foreach (HdInfo hd in HdKindList)
             {
                 regexHd = new Regex(hd.StrtRegex);
@@ -382,10 +412,8 @@ namespace wpfMovieArrangement
                 }
             }
 
-            if (matchHdInfo == null)
-            {
+            if (HdKind == null)
                 editText = myPasteText.Trim();
-            }
 
             // 日付を取得
             string matchProductDate = ParseSetSellDate(editText);

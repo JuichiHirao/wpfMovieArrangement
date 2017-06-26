@@ -39,6 +39,20 @@ namespace wpfMovieArrangement
                         ClipboardText = text;
                 }
             }
+            if (data.GetDataPresent(DataFormats.FileDrop))
+            {
+                foreach (string file in (string[])data.GetData(DataFormats.FileDrop))
+                {
+                    FileInfo fileinfo = new FileInfo(file);
+                    DirectoryInfo dirinfo = new DirectoryInfo(file);
+
+                    if (fileinfo.Exists || dirinfo.Exists)
+                    {
+                        ClipboardText = fileinfo.Name;
+                        break;
+                    }
+                }
+            }
 
             return ClipboardText;
         }
