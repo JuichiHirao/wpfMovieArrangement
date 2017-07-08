@@ -48,12 +48,19 @@ namespace wpfMovieArrangement.collection
                     continue;
 
                 Regex regex = new Regex(data.MatchStr);
-                Regex regexProductNumber = new Regex(data.MatchProductNumber);
                 if (data.MatchStr != null && data.MatchStr.Length > 0)
                 {
-                    if (regex.IsMatch(myPasteText)
-                        && regexProductNumber.IsMatch(myPasteText))
-                        matchMakerList.Add(data);
+                    if (regex.IsMatch(myPasteText))
+                    {
+                        if (!data.MatchProductNumber.ToLower().Equals("anything"))
+                        {
+                            Regex regexProductNumber = new Regex(data.MatchProductNumber);
+                            if (regexProductNumber.IsMatch(myPasteText))
+                                matchMakerList.Add(data);
+                        }
+                        else
+                            matchMakerList.Add(data);
+                    }
                 }
             }
 

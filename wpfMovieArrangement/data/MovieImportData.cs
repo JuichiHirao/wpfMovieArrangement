@@ -326,10 +326,14 @@ namespace wpfMovieArrangement
             return Regex.Replace(CopyText, ".*" + Regex.Escape(myText), "", RegexOptions.IgnoreCase).Trim();
         }
 
-        private string RemoveTextAfterDate(string myText)
+        private string RemoveTextAfterDate(string myText, bool myIsAfterCut)
         {
             string dateSprintString = Regex.Escape("/-");
-            return Regex.Replace(myText, " " + "[12][[0123][0-9][0-9][" + dateSprintString + "][0-1][0-9][" + dateSprintString + "][0-3][0-9].*", "").Trim();
+            if (myIsAfterCut)
+                return Regex.Replace(myText, " " + "[12][[0123][0-9][0-9][" + dateSprintString + "][0-1][0-9][" + dateSprintString + "][0-3][0-9].*", "").Trim();
+
+            return Regex.Replace(myText, "[12][[0123][0-9][0-9][" + dateSprintString + "][0-1][0-9][" + dateSprintString + "][0-3][0-9]", "").Trim();
+            //return Regex.Replace(myText, ". " + "[12][[0123][0-9][0-9][" + dateSprintString + "][0-1][0-9][" + dateSprintString + "][0-3][0-9]. ", "").Trim();
         }
 
         public void SetPickupTitle(MovieFileContents myFileContents)
@@ -338,9 +342,23 @@ namespace wpfMovieArrangement
 
             string workCopyText = "";
             // クリップボードテキストから不要な削除文字列を設定する
-            List<string> listCutText = new List<string>();
+            //List<string> listCutText = new List<string>();
 
             ProductNumber = impData.ProductNumber;
+
+            if (Maker != null)
+            {
+                Regex regex = new Regex(Maker.MatchProductNumber);
+                if (regex.IsMatch(workCopyText.Trim()))
+                {
+                    foreach (Match m in regex.Matches(workCopyText))
+                        workCopyText = impData.Title.Replace(m.Value.ToString(), "");
+                }
+            }
+            else
+            {
+                workCopyText = impData.Title;
+            }
 
             foreach (HdInfo data in HdKindList)
             {
@@ -348,7 +366,7 @@ namespace wpfMovieArrangement
                 if (regex.IsMatch(workCopyText.Trim()))
                 {
                     foreach (Match m in regex.Matches(workCopyText))
-                        workCopyText = impData.Title.Replace(m.Value.ToString(), "");
+                        workCopyText = workCopyText.Replace(m.Value.ToString(), "");
                 }
             }
 
@@ -375,7 +393,15 @@ namespace wpfMovieArrangement
                 ParseSetSellDate(CopyText);
 
             if (ProductDate.Year > 1900)
-                workCopyText = RemoveTextAfterDate(workCopyText);
+                workCopyText = RemoveTextAfterDate(workCopyText, true);
+
+            if (Maker != null && Maker.MatchProductNumber.Equals("anything"))
+            {
+                workCopyText = Regex.Replace(workCopyText, Maker.MatchStr, "").Trim();
+                workCopyText = RemoveTextAfterDate(workCopyText, false);
+            }
+            else if (Maker != null)
+                workCopyText = Regex.Replace(workCopyText, Maker.MatchStr, "").Trim();
 
             foreach (HdInfo data in HdKindList)
             {
@@ -397,7 +423,16 @@ namespace wpfMovieArrangement
         public void ParseFromPasteText(string myPasteText)
         {
             CopyText = myPasteText;
+
+            // 日付を取得
+            string matchProductDate = ParseSetSellDate(CopyText);
+
             string editText = "";
+            if (matchProductDate != null && matchProductDate.Length > 0)
+                editText = CopyText.Trim().Replace(matchProductDate, "");
+            else
+                editText = CopyText.Trim();
+
             Regex regexHd = null;
             foreach (HdInfo hd in HdKindList)
             {
@@ -405,18 +440,12 @@ namespace wpfMovieArrangement
 
                 if (regexHd.IsMatch(myPasteText))
                 {
-                    editText = myPasteText.Replace(regexHd.Match(myPasteText).Value.ToString(), "");
+                    editText = editText.Replace(regexHd.Match(myPasteText).Value.ToString(), "");
                     editText.Trim();
                     HdKind = hd;
                     break;
                 }
             }
-
-            if (HdKind == null)
-                editText = myPasteText.Trim();
-
-            // 日付を取得
-            string matchProductDate = ParseSetSellDate(editText);
 
             // 日付に「-」ハイフンがある場合は品番の区切りと間違えるので日付部分を削除
             //if (MatchStrSellDate.IndexOf("-") >= 0)
