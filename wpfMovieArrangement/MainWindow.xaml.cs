@@ -883,7 +883,7 @@ namespace wpfMovieArrangement
                 txtbSourceFilename.Text = dispinfoSelectMovieImportData.Filename;
                 txtChangeFileName.Text = dispinfoSelectMovieImportData.Filename;
 
-                MovieFileContents matchFileContents = ColViewMovieFileContents.MatchProductNumber(dispinfoSelectMovieImportData.ProductNumber);
+                List<MovieFileContents> matchFileContentsList = ColViewMovieFileContents.MatchProductNumber(dispinfoSelectMovieImportData.ProductNumber);
 
                 if ((bool)dispinfoSelectMovieImportData.RarFlag)
                 {
@@ -924,8 +924,10 @@ namespace wpfMovieArrangement
                     ChangeModeNormalMovieExecute(null, null);
                 }
 
-                if (matchFileContents != null)
+                if (matchFileContentsList.Count > 0)
                 {
+                    MovieFileContents matchFileContents = matchFileContentsList[0];
+
                     MovieImportData impData = new MovieImportData(matchFileContents.Name);
                     txtbExistFileId.Text = Convert.ToString(matchFileContents.Id);
                     txtbExistTitle.Text = impData.Title;
@@ -1068,19 +1070,32 @@ namespace wpfMovieArrangement
                     }
                 }
 
-                // HDの場合は、MOVIE_FILESからも一致するデータが存在するかを取得
-                MovieFileContents contents = ColViewMovieFileContents.MatchProductNumber(importData.ProductNumber);
+                List<MovieFileContents> matchList = null;
 
-                if (contents != null)
+                // HDの場合は、MOVIE_FILESからも一致するデータが存在するかを取得
+                matchList = ColViewMovieFileContents.MatchProductNumber(importData.ProductNumber);
+
+                if (matchList.Count == 1)
                 {
-                    dispinfoSelectMovieImportData = new MovieImportData(contents.Name);
+                    MovieFileContents fileContents = matchList[0];
+                    dispinfoSelectMovieImportData = new MovieImportData(fileContents.Name);
 
                     dispinfoSelectMovieImportData.CopyText = titletext;
-                    dispinfoSelectMovieImportData.FileId = contents.Id;
+                    dispinfoSelectMovieImportData.FileId = fileContents.Id;
                     dispinfoSelectMovieImportData.HdKind = importData.HdKind;
                     dispinfoSelectMovieImportData.HdFlag = true;
-                    dispinfoSelectMovieImportData.Tag = contents.Tag;
-                    dispinfoSelectMovieImportData.SetPickupTitle(contents);
+                    dispinfoSelectMovieImportData.Tag = fileContents.Tag;
+                    dispinfoSelectMovieImportData.SetPickupTitle(fileContents);
+                }
+                else if (matchList.Count > 1)
+                {
+                    string msg = "対象のMOVIE_FILE_CONTENTSが複数件存在します";
+
+                    foreach(MovieFileContents data in matchList)
+                    {
+                        msg += "\n" + data.Name;
+                    }
+                    txtStatusBar.Text = msg;
                 }
                 else
                 {
@@ -1579,11 +1594,12 @@ namespace wpfMovieArrangement
 
                 if (updateChecked && txtbFileGenFileId.Text.Length <= 0)
                 {
-                    MovieFileContents contents = ColViewMovieFileContents.MatchProductNumber(txtProductNumber.Text);
+                    List<MovieFileContents> fileContentsList = ColViewMovieFileContents.MatchProductNumber(txtProductNumber.Text);
 
-                    if (contents != null)
+                    if (fileContentsList.Count > 0)
                     {
-                        txtbFileGenFileId.Text = Convert.ToString(contents.Id);
+                        MovieFileContents fileContents = fileContentsList[0];
+                        txtbFileGenFileId.Text = Convert.ToString(fileContents.Id);
                     }
                 }
             }

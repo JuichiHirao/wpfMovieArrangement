@@ -24,13 +24,11 @@ namespace wpfMovieArrangement.collection
             return;
         }
 
-        public MovieFileContents MatchProductNumber(string myProductNumber)
+        public List<MovieFileContents> MatchProductNumber(string myProductNumber)
         {
-            int cnt = 0;
-            MovieFileContents matchData = new MovieFileContents();
+            List<MovieFileContents> fileList = new List<MovieFileContents>();
             foreach (MovieFileContents file in listFileContents)
             {
-                //string pnum = data.ProductNumber.Replace("-", "");
                 if (file.ProductNumber.Length <= 0)
                     continue;
 
@@ -38,18 +36,11 @@ namespace wpfMovieArrangement.collection
                     continue;
 
                 if (file.ProductNumber.Equals(myProductNumber))
-                {
-                    matchData = file;
-                    cnt++;
-                }
+                    fileList.Add(file);
             }
 
-            if (cnt == 1)
-                return matchData;
-            else if (cnt == 0)
-                return null;
-
-            throw new Exception("マッチデータが複数件存在します");
+            return fileList;
+            //throw new Exception("マッチデータが複数件存在します");
         }
 
         public MovieFileContents MatchId(int myId)
