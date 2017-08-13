@@ -13,6 +13,7 @@ namespace wpfMovieArrangement
         public string BasePath { get; set; }
         public string LabelPath { get; set; }
         public string KoreanPornoPath { get; set; }
+        public string KoreanPornoExportPath { get; set; }
     }
 
     class SettingXmlControl
@@ -41,17 +42,20 @@ namespace wpfMovieArrangement
                 setting.LabelPath = root.Element("LabelPath").Value;
             if (root.Element("KoreanPornoPath") != null)
                 setting.KoreanPornoPath = root.Element("KoreanPornoPath").Value;
+            if (root.Element("KoreanPornoExportPath") != null)
+                setting.KoreanPornoExportPath = root.Element("KoreanPornoExportPath").Value;
 
             return setting;
         }
 
-        public void Save(string myBasePath, string myLabelPath, string KoreanPornoPath)
+        public void Save(string myBasePath, string myLabelPath, string myKoreanPornoPath, string myKoreanPornoExportPath)
         {
             XElement root = new XElement("Setting");
 
             root.Add(new XElement("BasePath", myBasePath));
             root.Add(new XElement("LabelPath", myLabelPath));
-            root.Add(new XElement("KoreanPornoPath", KoreanPornoPath));
+            root.Add(new XElement("KoreanPornoPath", myKoreanPornoPath));
+            root.Add(new XElement("KoreanPornoExportPath", myKoreanPornoExportPath));
 
             root.Save(XmlFilename);
         }

@@ -38,10 +38,10 @@ namespace wpfMovieArrangement
         private collection.FileGeneTargetFilesCollection ColViewArrangementTarget; // dgridArrangementTarget
         private collection.FileGeneTargetFilesCollection ColViewDestFiles; // dgridDestFile
         private collection.MakerCollection ColViewMaker;
+        private collection.KoreanPornoCollection ColViewKoreanPorno;
 
         private List<MovieMaker> dispinfoSelectDataGridMakers = null;
-        private List<KoreanPornoData> dispinfoSelectDataGridKoreanPorno = null;
-        private string dispinfoKoreanPornoStorePath = null;
+        private KoreanPornoData dispinfoSelectDataGridKoreanPorno = null;
         private MovieImportData dispinfoSelectMovieImportData= null;
         // 日付コピー時には各DataGridがColViewではなくなるので、戻すためのフラグ
         private bool dispinfoIsDateCopyPasteExecute = false;
@@ -108,6 +108,22 @@ namespace wpfMovieArrangement
                 }
             }
 
+            private string _koreanPornoExportPath;
+
+            public string KoreanPornoExportPath
+            {
+                get { return this._koreanPornoExportPath; }
+                set
+                {
+                    this._koreanPornoExportPath = value;
+                    var handler = this.PropertyChanged;
+                    if (handler != null)
+                    {
+                        handler(this, new PropertyChangedEventArgs("KoreanPornoExportPath"));
+                    }
+                }
+            }
+
             private string _FilenameGenDate;
 
             public string FilenameGenDate
@@ -131,7 +147,7 @@ namespace wpfMovieArrangement
         {
             InitializeComponent();
 
-            ViewData = new ViewModel { BasePath = "", FilenameGenDate = "" };
+            ViewData = new ViewModel { BasePath = "", FilenameGenDate = "", KoreanPornoExportPath = "" };
             this.DataContext = ViewData;
 
             CommandBindings.Add(new CommandBinding(ChangeModeNormalRar, (s, ea) => { ChangeModeNormalRarExecute(s, ea); }, (s, ea) => ea.CanExecute = true));
@@ -157,6 +173,7 @@ namespace wpfMovieArrangement
             txtBasePath.Text = setting.BasePath;
             txtLabelPath.Text = setting.LabelPath;
             txtKoreanPornoPath.Text = setting.KoreanPornoPath;
+            txtKoreanPornoExportPath.Text = setting.KoreanPornoExportPath;
             txtFilenameGenDate.Text = "";
 
             ChangeModeNormalMovieExecute(null, null);
@@ -166,6 +183,7 @@ namespace wpfMovieArrangement
             ColViewFileGeneTargetFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
             ColViewArrangementTarget = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
             ColViewDestFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
+            ColViewKoreanPorno = new collection.KoreanPornoCollection(txtKoreanPornoPath.Text, txtKoreanPornoExportPath.Text);
 
             ColViewMovieFileContents = new collection.MovieFileContentsCollection();
 
@@ -174,6 +192,7 @@ namespace wpfMovieArrangement
             dgridCheckExistFiles.ItemsSource = ColViewFileGeneTargetFiles.ColViewListTargetFiles;
             dgridArrangementTarget.ItemsSource = ColViewArrangementTarget.ColViewListTargetFiles;
             dgridDestFile.ItemsSource = ColViewDestFiles.ColViewListTargetFiles;
+            dgridKoreanPorno.ItemsSource = ColViewKoreanPorno.ColViewListData;
 
             txtStatusBar.Width = statusbarMain.ActualWidth;
             txtStatusBar.Background = statusbarMain.Background;
@@ -184,9 +203,6 @@ namespace wpfMovieArrangement
 
             DbConnection localDbCon = new DbConnection();
             txtbDbNowDate.Text = localDbCon.getDateStringSql("SELECT GETDATE()");
-
-            dispinfoKoreanPornoStorePath = txtKoreanPornoPath.Text;
-            dgridKoreanPorno.ItemsSource = KoreanPorno.GetFolderData(dispinfoKoreanPornoStorePath);
         }
 
         /// <summary>
@@ -987,7 +1003,7 @@ namespace wpfMovieArrangement
 
         private void Window_Closed_1(object sender, EventArgs e)
         {
-            settingControl.Save(txtBasePath.Text, txtLabelPath.Text, txtKoreanPornoPath.Text);
+            settingControl.Save(txtBasePath.Text, txtLabelPath.Text, txtKoreanPornoPath.Text, txtKoreanPornoExportPath.Text);
         }
 
         private void btnPasteTitleText_Click(object sender, RoutedEventArgs e)
@@ -1473,13 +1489,19 @@ namespace wpfMovieArrangement
 
         private void dgridKoreanPorno_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (dispinfoSelectDataGridKoreanPorno.Count() == 1)
+            if (dispinfoSelectDataGridKoreanPorno != null)
             {
-                KoreanPornoData selData = dispinfoSelectDataGridKoreanPorno[0];
+                if (txtKoreanPornoExportPath.Text.Trim().Length <= 0)
+                {
+                    MessageBox.Show("出力先のパスが設定されていません");
+                    return;
+                }
+                KoreanPornoData selData = dispinfoSelectDataGridKoreanPorno;
                 txtbKoreanPornoName.Text = selData.Name;
                 txtbKoreanPornoArchiveFile.Text = selData.ArchiveFile;
 
-                List<KoreanPornoFileInfo> listFiles = KoreanPorno.GetFileInfo(dispinfoKoreanPornoStorePath, selData.Name, selData.LastWriteTime, dispinfoSelectDataGridKoreanPorno[0].ArchiveFile);
+                KoreanPornoService service = new KoreanPornoService(txtKoreanPornoPath.Text, txtKoreanPornoExportPath.Text);
+                List<KoreanPornoFileInfo> listFiles = service.GetFileInfo(selData.Name, selData.LastWriteTime, dispinfoSelectDataGridKoreanPorno.ArchiveFile);
 
                 if (listFiles == null)
                 {
@@ -1496,10 +1518,15 @@ namespace wpfMovieArrangement
 
         private void dgridKoreanPorno_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            dispinfoSelectDataGridKoreanPorno = new List<KoreanPornoData>();
-            foreach (KoreanPornoData data in dgridKoreanPorno.SelectedItems)
+            if (dgridKoreanPorno.SelectedItems != null)
             {
-                dispinfoSelectDataGridKoreanPorno.Add(data);
+                if (dgridKoreanPorno.SelectedItems.Count == 1)
+                    dispinfoSelectDataGridKoreanPorno = (KoreanPornoData)dgridKoreanPorno.SelectedItem;
+                else
+                {
+                    dispinfoSelectDataGridKoreanPorno = (KoreanPornoData)dgridKoreanPorno.SelectedItems[0];
+                    txtStatusBar.Text = "複数選択しているので、先頭の選択行を対象とします";
+                }
             }
         }
 
@@ -1507,14 +1534,17 @@ namespace wpfMovieArrangement
         {
             try
             {
-                KoreanPorno.ExecuteArrangement(dispinfoKoreanPornoStorePath, dispinfoSelectDataGridKoreanPorno[0], (List<KoreanPornoFileInfo>)dgridKoreanPornoFolder.ItemsSource);
+                KoreanPornoService service = new KoreanPornoService(txtKoreanPornoPath.Text, txtKoreanPornoExportPath.Text);
+                service.ExecuteArrangement(dispinfoSelectDataGridKoreanPorno, (List<KoreanPornoFileInfo>)dgridKoreanPornoFolder.ItemsSource);
+
+                ColViewKoreanPorno.Refresh();
+                dgridKoreanPorno.Items.Refresh();
             }
             catch (Exception ex)
             {
+                Debug.Write(ex);
                 MessageBox.Show(ex.Message);
             }
-
-            dgridKoreanPorno.ItemsSource = KoreanPorno.GetFolderData(dispinfoKoreanPornoStorePath);
 
             dgridKoreanPorno.Visibility = System.Windows.Visibility.Visible;
         }
@@ -1524,9 +1554,17 @@ namespace wpfMovieArrangement
             dgridKoreanPorno.Visibility = System.Windows.Visibility.Visible;
         }
 
-        private void btnKoreanPornoArrangePasteTitleText_Click(object sender, RoutedEventArgs e)
+        private void OnPasteKoreanPornoPath(object sender, RoutedEventArgs e)
         {
-            txtKoreanPornoPath.Text = ClipBoardCommon.GetTextPath();
+            Button btn = sender as Button;
+
+            if (btn == null)
+                return;
+
+            if (btn.Name.IndexOf("Export") >= 0)
+                txtKoreanPornoExportPath.Text = ClipBoardCommon.GetTextPath();
+            else
+                txtKoreanPornoPath.Text = ClipBoardCommon.GetTextPath();
         }
 
         private void OnMakersFilter(object sender, RoutedEventArgs e)
