@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wpfMovieArrangement"
         mc:Ignorable="d"
-        Title="MainWindow" Height="1000" Width="800" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged_1" Closed="Window_Closed_1">
+        Title="Test" Height="1000" Width="800" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged_1" Closed="Window_Closed_1">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalRar}"/>
         <CommandBinding Command="{x:Static local:MainWindow.ChangeModeNormalMovie}"/>
@@ -78,16 +78,16 @@
         <StatusBar Name="statusbarMain" DockPanel.Dock="Bottom"
                    Height="60" Width="Auto" Margin="0,0,0,0">
             <StatusBarItem Name="stsbaritemDispDetail">
-                <TextBlock Name="txtStatusBar" Width="500" TextWrapping="Wrap" />
+                <TextBlock Name="txtStatusBar" Width="Auto" TextWrapping="Wrap" />
             </StatusBarItem>
         </StatusBar>
-        <Grid Name="lgridMain" Visibility="Collapsed">
+        <Grid Name="lgridMain" Visibility="Visible">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="40"/>
                 <RowDefinition Height="180"/>
                 <RowDefinition Height="40"/>
-                <RowDefinition Height="40"/>
+                <RowDefinition Height="80"/>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="60"/>
             </Grid.RowDefinitions>
@@ -98,7 +98,7 @@
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="120" />
-                    <ColumnDefinition Width="450" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="80" />
                 </Grid.ColumnDefinitions>
                 <Button Name="btnBasePathPaste" Content="貼付" Width="100" Margin="5,0,5,0" Click="btnBasePathPaste_Click" />
@@ -126,7 +126,7 @@
                 </TextBox>
             </Grid>
             <Grid Name="lgridDateCopySource" Margin="15,3,15,3" Visibility="Collapsed" Grid.Row="1">
-                <Button Name="btnPasteSource" Content="日付コピー元貼付" Margin="5,0,5,0" Click="btnPasteSource_Click" />
+                <Button Name="btnDateCopyPasteSource" Content="日付コピー元貼付" Margin="5,0,5,0" Click="btnDateCopyPasteSource_Click" />
             </Grid>
             <WrapPanel Name="wpanelNormal" Margin="5,6,5,4" Grid.Row="1">
                 <TextBox Name="txtSearch" Width="300" />
@@ -154,14 +154,26 @@
                     <DataGridTextColumn Header="結果" Binding="{Binding Path=Message}" FontSize="9" />
                 </DataGrid.Columns>
             </DataGrid>
-            <TextBlock Name="txtbSourceFilename" Margin="5,5,5,5" FontSize="11" TextWrapping="Wrap" Grid.Row="3" />
+            <TextBlock Name="txtbTargetIdInfo" Width="30" Margin="5,5,5,5" HorizontalAlignment="Left" FontSize="11" TextWrapping="Wrap" Grid.Row="3" />
+            <TextBlock Name="txtbSourceFilename" Margin="45,5,5,5" FontSize="11" TextWrapping="Wrap" Grid.Row="3" />
             <Grid Name="lgridDateCopyDestination" Margin="15,3,15,3" Grid.Row="4">
-                <Button Name="btnPasteDestination" Content="日付コピー先ファイル貼付" Margin="5,0,5,0" Click="btnPasteDestination_Click" />
+                <Button Name="btnPasteDestination" Content="日付コピー先ファイル貼付" Margin="5,0" Click="btnPasteDestination_Click" />
             </Grid>
             <Grid Name="lgridNormalChangeFilename" Grid.Row="4">
-                <TextBox Name="txtChangeFileName" Width="Auto" Height="30" Margin="5,5,5,5" MouseDoubleClick="txtChangeFileName_MouseDoubleClick" />
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <TextBox Name="txtChangeFileName" Width="Auto" Height="30" Margin="5,5,5,5" MouseDoubleClick="txtChangeFileName_MouseDoubleClick" Grid.ColumnSpan="3" />
+                <TextBlock Name="txtbTag" Width="Auto" Height="30" Margin="5,5,5,5" FontSize="24" Grid.Row="1" />
+                <TextBlock Name="txtbExistFileId" Width="Auto" Height="30" Margin="5,5,5,5" FontSize="18" TextWrapping="Wrap" Grid.Column="1" Grid.Row="1" />
+                <TextBlock Name="txtbExistTitle" Width="Auto" Height="30" Margin="5,5,5,5" FontSize="10" TextWrapping="Wrap" Grid.Column="2" Grid.Row="1" />
             </Grid>
-            <!--<Button Name="btnAllSelect" Content="全選択" Width="60" Margin="5,0,5,0" Click="btnAllSelect_Click" HorizontalAlignment="Right" Grid.Row="3"/>-->
             <DataGrid Name="dgridDestFile" Width="Auto" FontSize="16" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Grid.Row="5" MouseDoubleClick="dgridDestFile_MouseDoubleClick">
                 <DataGrid.ContextMenu>
                     <ContextMenu>
@@ -181,11 +193,13 @@
                     <DataGridTextColumn Header="パス" Binding="{Binding Path=DispRelativePath}" IsReadOnly="True" />
                     <DataGridTextColumn Header="結果" Binding="{Binding Path=Message}" FontSize="9" IsReadOnly="True" />
                     <DataGridTextColumn Header="更新日時" Binding="{Binding Path=ListUpdateDate, StringFormat='yyyy/MM/dd HH:mm:ss'}" />
+                    <DataGridCheckBoxColumn Header="削除" Binding="{Binding Path=IsDeleted}" CellStyle="{StaticResource SingleClickEditing}" />
                 </DataGrid.Columns>
             </DataGrid>
-            <Button Name="btnExecuteNameChange" Content="実行" Margin="50,5,50,5" Grid.Row="6" Click="btnExecuteNameChange_Click" />
+            <Button Name="btnExecuteDelete" Content="全削除" Width="50" Margin="5,5,5,5" HorizontalAlignment="Left" Grid.Row="6" Click="btnExecuteDelete_Click" />
+            <Button Name="btnExecuteNameChange" Content="実行" Margin="80,5,80,5" Grid.Row="6" Click="btnExecuteNameChange_Click" />
             <!-- 右クリックでファイル名変更選択時 -->
-            <Grid Name="gridRenameFile" Grid.RowSpan="7" Visibility="Hidden">
+            <Grid Name="gridRenameFile" Grid.RowSpan="7" Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="100" />
                     <RowDefinition Height="*" />
@@ -218,34 +232,6 @@
                 <Button Content="変更実行" Name="btnRenameFileExecute" FontSize="24" Height="60" Width="300" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="2" Click="btnRenameFileExecute_Click" />
                 <Button Content="キャンセル" Name="btnRenameFileCancel" FontSize="24" Height="40" Width="200" Margin="0,0,0,10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Row="2" Click="btnRenameFileCancel_Click" />
             </Grid>
-            <!-- 出力ファイル名をダブルクリックした時 -->
-            <Grid Name="gridSelectTargetFilename" Grid.RowSpan="6" Visibility="Hidden">
-                <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition Height="50" />
-                </Grid.RowDefinitions>
-                <Border Margin="2,2,2,2" Grid.RowSpan="2">
-                    <Border.Background>
-                        <RadialGradientBrush Opacity="0.8">
-                            <GradientStop Color="#FFA3A7B9" Offset="0"/>
-                            <GradientStop Color="#FF3F3E4B" Offset="1"/>
-                            <GradientStop Color="#FF7B98C1" Offset="0.457"/>
-                        </RadialGradientBrush>
-                    </Border.Background>
-                </Border>
-                <DataGrid Name="dgridSelectTargetFilename" Width="Auto"  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgridSelectTargetFilename_MouseDoubleClick" >
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="ファイル名">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Name="Name" Text="{Binding Path=.}" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-                <Button Content="キャンセル" Name="btnSelectCancel" FontSize="24" Height="40" Width="200" Margin="5,5,5,5" HorizontalAlignment="Center" Grid.Row="1" Click="btnSelectCancel_Click" />
-            </Grid>
         </Grid>
         <!-- End of lgridMain -->
         <Grid Name="lgridFilenameGenerate" Visibility="Collapsed" >
@@ -256,9 +242,8 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" MinHeight="50" />
-                    <RowDefinition />
-                    <RowDefinition />
                     <RowDefinition Height="40" />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="120" />
@@ -266,6 +251,17 @@
                 </Grid.ColumnDefinitions>
                 <Button Name="btnPasteTitleText" Content="貼付" Margin="5,3,5,3" Click="btnPasteTitleText_Click" />
                 <TextBox Name="txtTitleText" Margin="5,3,5,3" FontSize="18" Grid.Column="1" TextWrapping="Wrap" />
+                <WrapPanel Orientation="Horizontal" Grid.ColumnSpan="2" Grid.Row="1" Height="40">
+                    <TextBlock Text="ImpId" Margin="5,5,5,5" FontSize="16" />
+                    <TextBlock Name="txtbFileGenImportId" Margin="5,5,5,5" FontSize="24" />
+                    <TextBlock Text="FileId" Margin="5,5,5,5" FontSize="16" />
+                    <TextBlock Name="txtbFileGenFileId" Margin="5,5,5,5" FontSize="24" />
+                    <Button Name="btnFileGenClearFileId" Content="Clear" Click="btnFileGenClearFileId_Click" />
+                </WrapPanel>
+                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Grid.Row="2">
+                    <ToggleButton Name="tbtnFileGeneTextAddRar" Content="RAR" Height="40" Width="100" Margin="5,5,5,5" />
+                    <ToggleButton Name="tbtnFileGenHdUpdate" Content="HDデータ更新" Height="40" Width="100" Margin="35,5,5,5" Click="tbtnFileGenHdUpdate_Click" />
+                </WrapPanel>
             </Grid>
             <Grid Grid.Row="1">
                 <Grid.Resources>
@@ -312,7 +308,15 @@
                     <TextBox Name="txtProductNumber" Margin="5,3,5,3" Grid.Column="1" Grid.Row="1" />
                     <TextBlock Text="日付" Margin="15,3,5,3" Grid.Column="2" />
                     <Button Name="btnPasteDate" Width="40" Margin="5,5,5,3" HorizontalAlignment="Right" Grid.Column="2" Click="btnPasteDate_Click" />
-                    <TextBox Name="txtFilenameGenDate" Margin="5,3,5,3" Grid.Column="2" Grid.Row="1" LostFocus="GenerateFilename" />
+                    <TextBox Name="txtFilenameGenDate" Margin="5,3,5,3" Grid.Column="2" Grid.Row="1" LostFocus="GenerateFilename">
+                        <TextBox.Text>
+                            <Binding Path="FilenameGenDate" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <local:TextBoxDateRule />
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
                 </Grid>
                 <TextBlock Text="メーカー" Margin="5,3,5,3" Grid.Row="1" />
                 <TextBlock Text="一致部分" Margin="0,0,250,0" HorizontalAlignment="Right" Grid.Row="1" />
@@ -320,7 +324,7 @@
                 <Button Content="追加" Name="btnOpenRegistMakerFromData" Width="80" Height="30" HorizontalAlignment="Right" Grid.Row="1" Click="btnOpenRegistMaker_Click" />
                 <TextBox Name="txtMaker" Margin="5,3,5,3" Grid.Row="2" TextWrapping="Wrap" MouseDoubleClick="txtMaker_MouseDoubleClick" />
                 <TextBlock Text="タイトル" Margin="5,3,5,3" Grid.Row="3" />
-                <TextBox Name="txtTitle" Margin="5,3,5,3" Grid.Row="4" TextWrapping="Wrap" LostFocus="GenerateFilename" />
+                <TextBox Name="txtTitle" Margin="5,3,5,3" Grid.Row="4" TextWrapping="Wrap" LostFocus="GenerateFilename" MouseDoubleClick="txtChangeFileName_MouseDoubleClick" />
                 <Grid Margin="5,3,5,3" VerticalAlignment="Bottom" Grid.Row="5">
                     <WrapPanel Orientation="Horizontal">
                         <TextBlock Text="出演" Margin="5,0,5,0"  />
@@ -329,9 +333,15 @@
                         <CheckBox Name="chkActressFixed" Margin="5,0,5,0" VerticalAlignment="Bottom" />
                         <Button Name="btnClearActress" Content="クリア" Click="btnClearActress_Click" />
                     </WrapPanel>
-                    <Button Name="btnFileGeneTextAddRar" Content="RAR" Width="60" HorizontalAlignment="Right" Click="btnFileGeneTextAddRar_Click" />
                 </Grid>
-                <TextBox Name="txtActresses" Margin="5,3,5,3" Grid.Row="6" TextWrapping="Wrap" />
+                <Grid Grid.Row="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Name="txtActresses" Margin="5,3,5,3" TextWrapping="Wrap" />
+                    <TextBox Name="txtTag" Margin="5,3,5,3" Grid.Column="1" TextWrapping="Wrap" />
+                </Grid>
                 <TextBox Name="txtFilenameGenerate" Margin="5,3,5,3" HorizontalAlignment="Left" FontSize="24" Grid.Row="7" TextWrapping="Wrap" />
                 <Grid Grid.Row="8">
                     <Grid.RowDefinitions>
@@ -468,7 +478,34 @@
             </Grid>
         </Grid>
         <!-- End of lgridFilenameGenerate -->
-        <Grid Name="lgridKoreanPornoArrange" Visibility="Hidden" >
+        <Grid Name="gridSelectTargetFilename" Grid.RowSpan="6" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+            <Border Margin="2,2,2,2" Grid.RowSpan="2">
+                <Border.Background>
+                    <RadialGradientBrush Opacity="0.8">
+                        <GradientStop Color="#FFA3A7B9" Offset="0"/>
+                        <GradientStop Color="#FF3F3E4B" Offset="1"/>
+                        <GradientStop Color="#FF7B98C1" Offset="0.457"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+            <DataGrid Name="dgridSelectTargetFilename" Width="Auto"  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgridSelectTargetFilename_MouseDoubleClick" >
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="ファイル名">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Name="Name" Text="{Binding Path=Filename}" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Button Content="キャンセル" Name="btnSelectCancel" FontSize="24" Height="40" Width="200" Margin="5,5,5,5" HorizontalAlignment="Center" Grid.Row="1" Click="btnSelectCancel_Click" />
+        </Grid>
+        <Grid Name="lgridKoreanPornoArrange" Visibility="Collapsed" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition />
@@ -477,15 +514,26 @@
                 <Grid.RowDefinitions>
                     <RowDefinition />
                     <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="100" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <Button Name="btnKoreanPornoArrangePasteTitleText" Content="貼付" Width="80" Margin="5,3,5,3" HorizontalAlignment="Left" Click="btnKoreanPornoArrangePasteTitleText_Click" />
+                <Button Name="btnKoreanPornoPasteTitleText" Content="貼付" Width="80" Margin="5,3,5,3" HorizontalAlignment="Left" Click="OnPasteKoreanPornoPath" />
                 <TextBox Name="txtKoreanPornoPath"  Validation.ErrorTemplate="{StaticResource TextBoxErrorTemplate}" Margin="5,3,5,3"  FontSize="18" TextWrapping="Wrap" Grid.Column="1">
                     <TextBox.Text>
                         <Binding Path="KoreanPornoPath" UpdateSourceTrigger="PropertyChanged">
+                            <Binding.ValidationRules>
+                                <local:TextBoxFilePathRule />
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+                <Button Name="btnKoreanPornoExportPathPasteTitleText" Content="貼付" Width="80" Margin="5,3,5,3" HorizontalAlignment="Left" Grid.Row="1" Click="OnPasteKoreanPornoPath" />
+                <TextBox Name="txtKoreanPornoExportPath"  Validation.ErrorTemplate="{StaticResource TextBoxErrorTemplate}" Margin="5,3,5,3"  FontSize="18" TextWrapping="Wrap" Grid.Column="1" Grid.Row="1">
+                    <TextBox.Text>
+                        <Binding Path="KoreanPornoExportPath" UpdateSourceTrigger="PropertyChanged">
                             <Binding.ValidationRules>
                                 <local:TextBoxFilePathRule />
                             </Binding.ValidationRules>

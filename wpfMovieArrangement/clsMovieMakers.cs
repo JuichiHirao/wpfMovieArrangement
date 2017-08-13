@@ -11,62 +11,6 @@ namespace wpfMovieArrangement
 {
     class MovieMakers
     {
-        public static List<MovieMaker> GetMatchData(string myText, List<MovieMaker> myListMakers, MovieFileContents myFileContents)
-        {
-            List<MovieMaker> listMatchMaker = null;
-
-            // 品番っぽい文字列が存在する場合
-            //if (myFileContents.Kind == MovieFileContents.KIND_AVRIP)
-            if (myFileContents.ProductNumber != null && myFileContents.ProductNumber.Length > 0)
-            {
-                string[] label = myFileContents.ProductNumber.Split('-');
-                var matchdata = from makerdata in myListMakers
-                                where makerdata.MatchStr.ToUpper() == label[0].ToUpper() // + '-'
-                                    && makerdata.MatchProductNumber.Length <= 0
-                                select makerdata;
-
-                if (matchdata.Count() > 0)
-                {
-                    listMatchMaker = new List<MovieMaker>();
-
-                    foreach (MovieMaker m in matchdata)
-                        listMatchMaker.Add(m);
-                }
-            }
-            // 品番っぽいのが無い場合は、品番一致文字列があるタイトルと一致
-            if (listMatchMaker == null || listMatchMaker.Count() <= 0)
-            {
-                foreach(MovieMaker makerdata in myListMakers)
-                {
-                    if (makerdata.MatchProductNumber.Length <= 0)
-                        continue;
-
-                    Regex regex = new Regex(makerdata.MatchStr, RegexOptions.IgnoreCase);
-                    if (regex.IsMatch(myText))
-                    {
-                        try
-                        {
-                            Regex regexPN = new Regex(makerdata.MatchProductNumber);
-                            if (regexPN.IsMatch(myText))
-                            {
-                                makerdata.MatchProductNumberValue = regexPN.Match(myText).Value;
-                                if (listMatchMaker == null)
-                                    listMatchMaker = new List<MovieMaker>();
-
-                                listMatchMaker.Add(makerdata);
-                            }
-                        }
-                        catch (ArgumentException)
-                        {
-                            throw new Exception("正規表現が不正です\n" + makerdata.Name + "\n" + makerdata.MatchProductNumber);
-                        }
-                    }
-                }
-            }
-
-            return listMatchMaker;
-        }
-
         public static MovieMaker GetSearchByProductNumber(string myProductNumber)
         {
             DbConnection dbcon = new DbConnection();

@@ -56,6 +56,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="collection\FileGeneTargetFilesCollection.cs" />
+    <Compile Include="collection\KoreanPornoCollection.cs" />
+    <Compile Include="collection\MakerCollection.cs" />
+    <Compile Include="collection\MovieFileContentsCollection.cs" />
+    <Compile Include="service\DateCopyService.cs" />
+    <Compile Include="service\FilesRegisterService.cs" />
+    <Compile Include="service\HdUpdateService.cs" />
+    <Compile Include="service\KoreanPornoService.cs" />
+    <Compile Include="service\MovieImportService.cs" />
     <Page Include="assets\Theme.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -71,9 +80,9 @@
     <Compile Include="clsCommonArrangeMethod.cs" />
     <Compile Include="clsDbConnection.cs" />
     <Compile Include="clsDbExportCommon.cs" />
-    <Compile Include="clsKoreanPorno.cs" />
+    <Compile Include="data\KoreanPornoData.cs" />
     <Compile Include="clsMovieFileContents.cs" />
-    <Compile Include="clsMovieFileContentsParent.cs" />
+    <Compile Include="service\MovieFileContentsService.cs" />
     <Compile Include="clsMovieMaker.cs" />
     <Compile Include="clsMovieMakers.cs" />
     <Compile Include="clsRowColorConverter.cs" />
@@ -87,6 +96,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="data\MovieImportData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

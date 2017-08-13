@@ -9,7 +9,7 @@ using System.Data.SqlClient;
 
 namespace wpfMovieArrangement
 {
-    class MovieFileContentsParent
+    class MovieFileContentsService
     {
         public double TotalLength = 0;
         public int FileCount = 0;
@@ -124,7 +124,7 @@ namespace wpfMovieArrangement
 
             List<MovieFileContents> listMContents = new List<MovieFileContents>();
 
-            string queryString = "SELECT ID, NAME, SIZE, FILE_DATE, LABEL, SELL_DATE, PRODUCT_NUMBER FROM MOVIE_FILES ORDER BY FILE_DATE DESC ";
+            string queryString = "SELECT ID, NAME, SIZE, FILE_DATE, LABEL, SELL_DATE, PRODUCT_NUMBER, TAG, EXTENSION FROM MOVIE_FILES ORDER BY FILE_DATE DESC ";
 
             dbcon.openConnection();
 
@@ -149,6 +149,8 @@ namespace wpfMovieArrangement
                     data.Label = DbExportCommon.GetDbString(reader, 4);
                     data.SellDate = DbExportCommon.GetDbDateTime(reader, 5);
                     data.ProductNumber = DbExportCommon.GetDbString(reader, 6);
+                    data.Tag = DbExportCommon.GetDbString(reader, 7);
+                    data.Extension = DbExportCommon.GetDbString(reader, 8);
 
                     listMContents.Add(data);
                 }
@@ -159,6 +161,58 @@ namespace wpfMovieArrangement
             dbcon.closeConnection();
 
             return listMContents;
+        }
+
+        public void DbUpdateFileInfo(MovieFileContents myData, DbConnection myDbCon)
+        {
+            DbConnection dbcon;
+            string sqlcmd = "";
+
+            // 引数にコネクションが指定されていた場合は指定されたコネクションを使用
+            if (myDbCon != null)
+                dbcon = myDbCon;
+            else
+                dbcon = new DbConnection();
+
+            //string queryString = "SELECT ID, NAME, SIZE, FILE_DATE, LABEL, SELL_DATE, PRODUCT_NUMBER FROM MOVIE_FILES ORDER BY FILE_DATE DESC ";
+            sqlcmd = "UPDATE MOVIE_FILES ";
+            sqlcmd += "SET ";
+            sqlcmd += "  NAME = @Name ";
+            sqlcmd += ", EXTENSION = @Extension ";
+            sqlcmd += ", SIZE = @Size ";
+            sqlcmd += ", FILE_DATE = @FileDate ";
+            sqlcmd += "WHERE ID = @Id ";
+
+            SqlCommand scmd = new SqlCommand(sqlcmd, dbcon.getSqlConnection());
+            DataTable dtSaraly = new DataTable();
+
+            List<SqlParameter> listSqlParams = new List<SqlParameter>();
+
+            SqlParameter sqlparam = new SqlParameter("@Name", SqlDbType.VarChar);
+            sqlparam.Value = myData.Name;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Extension", SqlDbType.VarChar);
+            sqlparam.Value = myData.Extension;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Size", SqlDbType.BigInt);
+            sqlparam.Value = myData.Size;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@FileDate", SqlDbType.DateTime);
+            sqlparam.Value = myData.FileDate;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@Id", SqlDbType.Int);
+            sqlparam.Value = myData.Id;
+            listSqlParams.Add(sqlparam);
+
+            dbcon.SetParameter(listSqlParams.ToArray());
+
+            dbcon.execSqlCommand(sqlcmd);
+
+            return;
         }
 
         public string GetFileLength()
