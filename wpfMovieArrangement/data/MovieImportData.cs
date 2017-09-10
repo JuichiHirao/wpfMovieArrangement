@@ -15,9 +15,11 @@ namespace wpfMovieArrangement
         {
             HdKindList.Add(new HdInfo(1, "60fps HD", "\\[FHD60fps\\]"));
             HdKindList.Add(new HdInfo(2, "60fps HD", "FHD60fps"));
-            HdKindList.Add(new HdInfo(3, "FHD", "\\[FHD\\]"));
-            HdKindList.Add(new HdInfo(4, "FHD", "FHD"));
-            HdKindList.Add(new HdInfo(5, "HD", "\\[HD\\]"));
+            HdKindList.Add(new HdInfo(3, "WMF FHD", "FHDwmf"));
+            HdKindList.Add(new HdInfo(4, "WMF FHD", "\\[FHDwmf\\]"));
+            HdKindList.Add(new HdInfo(5, "FHD", "\\[FHD\\]"));
+            HdKindList.Add(new HdInfo(6, "FHD", "FHD"));
+            HdKindList.Add(new HdInfo(7, "HD", "\\[HD\\]"));
         }
         public class HdInfo
         {
