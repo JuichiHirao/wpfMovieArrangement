@@ -140,6 +140,22 @@ namespace wpfMovieArrangement
                 }
             }
 
+            private string _ChangeFileName;
+
+            public string ChangeFileName
+            {
+                get { return this._ChangeFileName; }
+                set
+                {
+                    this._ChangeFileName = value;
+                    var handler = this.PropertyChanged;
+                    if (handler != null)
+                    {
+                        handler(this, new PropertyChangedEventArgs("ChangeFileName"));
+                    }
+                }
+            }
+
             public event PropertyChangedEventHandler PropertyChanged;
         }
 
@@ -147,7 +163,7 @@ namespace wpfMovieArrangement
         {
             InitializeComponent();
 
-            ViewData = new ViewModel { BasePath = "", FilenameGenDate = "", KoreanPornoExportPath = "" };
+            ViewData = new ViewModel { BasePath = "", FilenameGenDate = "", KoreanPornoExportPath = "", ChangeFileName = "" };
             this.DataContext = ViewData;
 
             CommandBindings.Add(new CommandBinding(ChangeModeNormalRar, (s, ea) => { ChangeModeNormalRarExecute(s, ea); }, (s, ea) => ea.CanExecute = true));
