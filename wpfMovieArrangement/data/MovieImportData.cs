@@ -172,6 +172,24 @@ namespace wpfMovieArrangement
             return;
         }
 
+        private bool _SplitFlag;
+        public bool? SplitFlag
+        {
+            get
+            {
+                return _SplitFlag;
+            }
+            set
+            {
+                if (value == null)
+                    _SplitFlag = false;
+                else
+                {
+                    _SplitFlag = (bool)value;
+                }
+            }
+        }
+
         private bool _RarFlag;
         public bool? RarFlag
         {

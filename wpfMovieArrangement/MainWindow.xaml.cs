@@ -1332,12 +1332,16 @@ namespace wpfMovieArrangement
                 movieImportData.Kind = Convert.ToInt32(txtKind.Text);
             movieImportData.MatchProduct = txtMatchStr.Text;
             movieImportData.ProductNumber = txtProductNumber.Text;
-            movieImportData.StrProductDate = txtFilenameGenDate.Text;
+            if (Validation.GetHasError(txtFilenameGenDate))
+                movieImportData.ProductDate = new DateTime(1900, 1, 1);
+            else
+                movieImportData.StrProductDate = txtFilenameGenDate.Text;
             movieImportData.StrMaker = txtMaker.Text;
             movieImportData.Title = txtTitle.Text;
             movieImportData.Actresses = txtActresses.Text;
             movieImportData.HdFlag = tbtnFileGenHdUpdate.IsChecked;
             movieImportData.RarFlag = tbtnFileGeneTextAddRar.IsChecked;
+            movieImportData.SplitFlag = tbtnFileGenSplit.IsChecked;
             movieImportData.Tag = txtTag.Text;
             movieImportData.GenerateFilename();
             movieImportData.Filename = txtFilenameGenerate.Text;
@@ -1366,6 +1370,7 @@ namespace wpfMovieArrangement
             txtActresses.Text = myData.Actresses;
             txtTag.Text = myData.Tag;
             tbtnFileGeneTextAddRar.IsChecked = myData.RarFlag;
+            tbtnFileGenSplit.IsChecked = myData.SplitFlag;
             txtFilenameGenerate.Text = myData.Filename;
 
             if (myData.FileId > 0)
@@ -1379,13 +1384,13 @@ namespace wpfMovieArrangement
             txtTitleText.Text = "";
             if (chkKindFixed.IsChecked == null || !(bool)chkKindFixed.IsChecked) txtKind.Text = "";
             txtMatchStr.Text = "";
-            //txtFilenameGenDate.Text = "";
             txtProductNumber.Text = "";
             txtMaker.Text = "";
             txtTitle.Text = "";
             txtActresses.Text = "";
             txtTag.Text = "";
             tbtnFileGeneTextAddRar.IsChecked = false;
+            tbtnFileGenSplit.IsChecked = false;
             txtFilenameGenerate.Text = "";
             tbtnFileGenHdUpdate.IsChecked = false;
 
@@ -1411,12 +1416,30 @@ namespace wpfMovieArrangement
 
         private void btnGenerateFilenameCopy_Click(object sender, RoutedEventArgs e)
         {
-            if (Validation.GetHasError(txtFilenameGenDate))
+            bool b = false;
+            if (tbtnFileGenModeFilenameOnly.IsChecked != null)
+                b = (bool)tbtnFileGenModeFilenameOnly.IsChecked;
+
+            MovieImportService service = new service.MovieImportService();
+            if (GetChecked(tbtnFileGenModeFilenameOnly))
+            {
+                MovieImportData movieImportData = GetImportDataFromUIElement();
+
+                movieImportData = service.DbExport(movieImportData, new DbConnection());
+
+                ClearUIElement();
+
                 return;
+            }
+
+            if (Validation.GetHasError(txtFilenameGenDate))
+            {
+                txtStatusBar.Text = "日付が正しく入力されていないため登録できません";
+                return;
+            }
 
             string importId = txtbFileGenImportId.Text;
 
-            MovieImportService service = new service.MovieImportService();
             if (importId.Length > 0)
             {
                 MovieImportData movieImportData = GetImportDataFromUIElement();
@@ -1656,6 +1679,22 @@ namespace wpfMovieArrangement
         private void txtSearchTartgetFilename_TextChanged(object sender, TextChangedEventArgs e)
         {
             ColViewMovieImport.Filter(txtSearchTartgetFilename.Text);
+        }
+
+        private void tbtnFileGenModeFilenameOnly_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetChecked((ToggleButton)sender))
+                this.Background = new SolidColorBrush(Colors.LightGreen);
+            else
+                this.Background = new SolidColorBrush(Colors.White);
+        }
+        public bool GetChecked(ToggleButton myToggleButton)
+        {
+            bool b = false;
+            if (myToggleButton.IsChecked != null)
+                b = (bool)myToggleButton.IsChecked;
+
+            return b;
         }
     }
 }

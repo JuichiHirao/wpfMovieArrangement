@@ -21,8 +21,8 @@ namespace wpfMovieArrangement.service
             else
                 dbcon = new DbConnection();
 
-            sqlcmd = "INSERT INTO MOVIE_IMPORT ( COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, TAG, FILENAME, HD_KIND, MOVIE_FILES_ID ) ";
-            sqlcmd = sqlcmd + "VALUES( @CopyText, @Kind, @MatchProduct, @ProductNumber, @ProductDate, @Maker, @Title, @Actresses, @RarFlag, @Tag, @Filename, @HdKind, @MovieFilesId ) ";
+            sqlcmd = "INSERT INTO MOVIE_IMPORT ( COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, SPLIT_FLAG, TAG, FILENAME, HD_KIND, MOVIE_FILES_ID ) ";
+            sqlcmd = sqlcmd + "VALUES( @CopyText, @Kind, @MatchProduct, @ProductNumber, @ProductDate, @Maker, @Title, @Actresses, @RarFlag, @SplitFlag, @Tag, @Filename, @HdKind, @MovieFilesId ) ";
 
             SqlCommand scmd = new SqlCommand(sqlcmd, dbcon.getSqlConnection());
             DataTable dtSaraly = new DataTable();
@@ -63,6 +63,10 @@ namespace wpfMovieArrangement.service
 
             sqlparam = new SqlParameter("@RarFlag", SqlDbType.Int);
             sqlparam.Value = myData.RarFlag;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@SplitFlag", SqlDbType.Int);
+            sqlparam.Value = myData.SplitFlag;
             listSqlParams.Add(sqlparam);
 
             sqlparam = new SqlParameter("@Tag", SqlDbType.VarChar);
@@ -115,6 +119,7 @@ namespace wpfMovieArrangement.service
             sqlcmd += ", TITLE = @Title ";
             sqlcmd += ", ACTRESSES = @Actresses ";
             sqlcmd += ", RAR_FLAG = @RarFlag ";
+            sqlcmd += ", SPLIT_FLAG = @SplitFlag ";
             sqlcmd += ", TAG = @Tag ";
             sqlcmd += ", FILENAME = @Filename ";
             sqlcmd += ", HD_KIND = @HdKind ";
@@ -160,6 +165,10 @@ namespace wpfMovieArrangement.service
 
             sqlparam = new SqlParameter("@RarFlag", SqlDbType.Int);
             sqlparam.Value = myData.RarFlag;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@SplitFlag", SqlDbType.Int);
+            sqlparam.Value = myData.SplitFlag;
             listSqlParams.Add(sqlparam);
 
             sqlparam = new SqlParameter("@Tag", SqlDbType.VarChar);
@@ -232,7 +241,7 @@ namespace wpfMovieArrangement.service
             else
                 dbcon = new DbConnection();
 
-            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE ";
+            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, SPLIT_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE ";
             sqlcmd = sqlcmd + "FROM MOVIE_IMPORT ";
             sqlcmd = sqlcmd + "ORDER BY CREATE_DATE DESC";
 
@@ -259,10 +268,11 @@ namespace wpfMovieArrangement.service
                     newestData.Title = DbExportCommon.GetDbString(reader, 7);
                     newestData.Actresses = DbExportCommon.GetDbString(reader, 8);
                     newestData.RarFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 9));
-                    newestData.Tag = DbExportCommon.GetDbString(reader, 10);
-                    newestData.Filename = DbExportCommon.GetDbString(reader, 11);
-                    newestData.CreateDate = DbExportCommon.GetDbDateTime(reader, 12);
-                    newestData.UpdateDate = DbExportCommon.GetDbDateTime(reader, 13);
+                    newestData.SplitFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 10));
+                    newestData.Tag = DbExportCommon.GetDbString(reader, 11);
+                    newestData.Filename = DbExportCommon.GetDbString(reader, 12);
+                    newestData.CreateDate = DbExportCommon.GetDbDateTime(reader, 13);
+                    newestData.UpdateDate = DbExportCommon.GetDbDateTime(reader, 14);
                 }
             }
             finally
@@ -290,7 +300,7 @@ namespace wpfMovieArrangement.service
             else
                 dbcon = new DbConnection();
 
-            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE, HD_KIND, MOVIE_FILES_ID ";
+            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, SPLIT_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE, HD_KIND, MOVIE_FILES_ID ";
             sqlcmd = sqlcmd + "FROM MOVIE_IMPORT ";
             sqlcmd = sqlcmd + "ORDER BY CREATE_DATE ";
 
@@ -321,12 +331,13 @@ namespace wpfMovieArrangement.service
                         data.Title = DbExportCommon.GetDbString(reader, 7);
                         data.Actresses = DbExportCommon.GetDbString(reader, 8);
                         data.RarFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 9));
-                        data.Tag = DbExportCommon.GetDbString(reader, 10);
-                        data.Filename = DbExportCommon.GetDbString(reader, 11);
-                        data.CreateDate = DbExportCommon.GetDbDateTime(reader, 12);
-                        data.UpdateDate = DbExportCommon.GetDbDateTime(reader, 13);
-                        data.SetHdKind(DbExportCommon.GetDbInt(reader, 14));
-                        data.FileId = DbExportCommon.GetDbInt(reader, 15);
+                        data.SplitFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 10));
+                        data.Tag = DbExportCommon.GetDbString(reader, 11);
+                        data.Filename = DbExportCommon.GetDbString(reader, 12);
+                        data.CreateDate = DbExportCommon.GetDbDateTime(reader, 13);
+                        data.UpdateDate = DbExportCommon.GetDbDateTime(reader, 14);
+                        data.SetHdKind(DbExportCommon.GetDbInt(reader, 15));
+                        data.FileId = DbExportCommon.GetDbInt(reader, 16);
 
                         listData.Add(data);
                     }
