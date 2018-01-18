@@ -60,6 +60,7 @@
     <Compile Include="collection\KoreanPornoCollection.cs" />
     <Compile Include="collection\MakerCollection.cs" />
     <Compile Include="collection\MovieFileContentsCollection.cs" />
+    <Compile Include="collection\MovieImportCollection.cs" />
     <Compile Include="service\DateCopyService.cs" />
     <Compile Include="service\FilesRegisterService.cs" />
     <Compile Include="service\HdUpdateService.cs" />

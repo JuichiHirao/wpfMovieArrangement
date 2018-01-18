@@ -14,6 +14,7 @@ using Microsoft.VisualBasic.FileIO;
 using System.ComponentModel;
 using System.Windows.Controls.Primitives;
 using wpfMovieArrangement.service;
+using wpfMovieArrangement.collection;
 
 namespace wpfMovieArrangement
 {
@@ -29,16 +30,14 @@ namespace wpfMovieArrangement
         public readonly static RoutedCommand CahngeModeFilenameGenerate = new RoutedCommand("CahngeModeFilenameGenerate", typeof(MainWindow));
         public readonly static RoutedCommand CahngeModeKoreanPorno = new RoutedCommand("CahngeModeKoreanPorno", typeof(MainWindow));
 
-        //private List<MovieFileContents> listFilesContents = null;
-        private List<MovieImportData> listImportTarget = null;
+        private MovieFileContentsCollection ColViewMovieFileContents;
 
-        private collection.MovieFileContentsCollection ColViewMovieFileContents;
-
-        private collection.FileGeneTargetFilesCollection ColViewFileGeneTargetFiles;
-        private collection.FileGeneTargetFilesCollection ColViewArrangementTarget; // dgridArrangementTarget
-        private collection.FileGeneTargetFilesCollection ColViewDestFiles; // dgridDestFile
-        private collection.MakerCollection ColViewMaker;
-        private collection.KoreanPornoCollection ColViewKoreanPorno;
+        private MovieImportCollection ColViewMovieImport;
+        private FileGeneTargetFilesCollection ColViewFileGeneTargetFiles;
+        private FileGeneTargetFilesCollection ColViewArrangementTarget; // dgridArrangementTarget
+        private FileGeneTargetFilesCollection ColViewDestFiles; // dgridDestFile
+        private MakerCollection ColViewMaker;
+        private KoreanPornoCollection ColViewKoreanPorno;
 
         private List<MovieMaker> dispinfoSelectDataGridMakers = null;
         private KoreanPornoData dispinfoSelectDataGridKoreanPorno = null;
@@ -200,6 +199,7 @@ namespace wpfMovieArrangement
             ColViewArrangementTarget = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
             ColViewDestFiles = new collection.FileGeneTargetFilesCollection(txtBasePath.Text);
             ColViewKoreanPorno = new collection.KoreanPornoCollection(txtKoreanPornoPath.Text, txtKoreanPornoExportPath.Text);
+            ColViewMovieImport = new MovieImportCollection();
 
             ColViewMovieFileContents = new collection.MovieFileContentsCollection();
 
@@ -209,13 +209,13 @@ namespace wpfMovieArrangement
             dgridArrangementTarget.ItemsSource = ColViewArrangementTarget.ColViewListTargetFiles;
             dgridDestFile.ItemsSource = ColViewDestFiles.ColViewListTargetFiles;
             dgridKoreanPorno.ItemsSource = ColViewKoreanPorno.ColViewListData;
+            dgridSelectTargetFilename.ItemsSource = ColViewMovieImport.collection;
 
             txtStatusBar.Width = statusbarMain.ActualWidth;
             txtStatusBar.Background = statusbarMain.Background;
 
             dgridSelectTargetFilename.Width = statusbarMain.ActualWidth;
-            service.MovieImportService service = new service.MovieImportService();
-            listImportTarget = service.GetList(new DbConnection());
+            ColViewMovieImport.Refresh();
 
             DbConnection localDbCon = new DbConnection();
             txtbDbNowDate.Text = localDbCon.getDateStringSql("SELECT GETDATE()");
@@ -576,8 +576,7 @@ namespace wpfMovieArrangement
             service.targetImportData = dispinfoSelectMovieImportData;
             service.DeleteExecute(ColViewDestFiles.listTargetFiles);
 
-            service.MovieImportService serviceImport = new service.MovieImportService();
-            listImportTarget = serviceImport.GetList(new DbConnection());
+            ColViewMovieImport.Refresh();
 
             txtChangeFileName.Text = "";
             txtbTag.Text = "";
@@ -585,7 +584,7 @@ namespace wpfMovieArrangement
         }
 
         private void btnExecuteNameChange_Click(object sender, RoutedEventArgs e)
-        {
+       {
             if (dispctrlMode == MODE_DATECOPY)
             {
                 DateCopyService serviceDataCopy = new DateCopyService();
@@ -723,8 +722,7 @@ namespace wpfMovieArrangement
                 MessageBox.Show("削除失敗 " + ex.Message);
             }
 
-            service.MovieImportService serviceImport = new service.MovieImportService();
-            listImportTarget = serviceImport.GetList(new DbConnection());
+            ColViewMovieImport.Refresh();
 
             txtChangeFileName.Text = "";
             txtbTag.Text = "";
@@ -872,7 +870,8 @@ namespace wpfMovieArrangement
 
         private void txtChangeFileName_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            dgridSelectTargetFilename.ItemsSource = listImportTarget;
+            dgridSelectTargetFilename.ItemsSource = ColViewMovieImport.collection;
+
             if (dispctrlMode == MODE_FILENAMEGENERATE)
                 lgridFilenameGenerate.Visibility = System.Windows.Visibility.Collapsed;
             else
@@ -1093,14 +1092,7 @@ namespace wpfMovieArrangement
             if (importData.ProductNumber != null && importData.ProductNumber.Length > 0)
             {
                 // MOVIE_IMPORT_DATAに既存にデータがが存在すれば表示
-                foreach(MovieImportData imp in listImportTarget)
-                {
-                    if (imp.ProductNumber.Equals(importData.ProductNumber))
-                    {
-                        dispinfoSelectMovieImportData = imp;
-                        break;
-                    }
-                }
+                dispinfoSelectMovieImportData = ColViewMovieImport.GetDataByProductId(importData.ProductNumber);
 
                 List<MovieFileContents> matchList = null;
 
@@ -1424,17 +1416,13 @@ namespace wpfMovieArrangement
 
             string importId = txtbFileGenImportId.Text;
 
-            service.MovieImportService service = new service.MovieImportService();
+            MovieImportService service = new service.MovieImportService();
             if (importId.Length > 0)
             {
                 MovieImportData movieImportData = GetImportDataFromUIElement();
                 movieImportData.Id = Convert.ToInt32(importId);
 
                 service.DbUpdate(movieImportData, new DbConnection());
-
-                //ClearUIElement();
-
-                //listImportTarget.Add(movieImportData);
             }
             else
             {
@@ -1443,9 +1431,9 @@ namespace wpfMovieArrangement
                 movieImportData = service.DbExport(movieImportData, new DbConnection());
 
                 ClearUIElement();
-
-                listImportTarget.Add(movieImportData);
             }
+
+            ColViewMovieImport.Refresh();
         }
 
         private void btnPasteActresses_Click(object sender, RoutedEventArgs e)
@@ -1663,6 +1651,11 @@ namespace wpfMovieArrangement
         {
             txtbFileGenFileId.Text = "";
             tbtnFileGenHdUpdate.IsChecked = false;
+        }
+
+        private void txtSearchTartgetFilename_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ColViewMovieImport.Filter(txtSearchTartgetFilename.Text);
         }
     }
 }

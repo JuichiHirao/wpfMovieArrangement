@@ -489,10 +489,11 @@
         <!-- End of lgridFilenameGenerate -->
         <Grid Name="gridSelectTargetFilename" Grid.RowSpan="6" Visibility="Collapsed">
             <Grid.RowDefinitions>
+                <RowDefinition Height="50" />
                 <RowDefinition />
                 <RowDefinition Height="50" />
             </Grid.RowDefinitions>
-            <Border Margin="2,2,2,2" Grid.RowSpan="2">
+            <Border Margin="2,2,2,2" Grid.RowSpan="3">
                 <Border.Background>
                     <RadialGradientBrush Opacity="0.8">
                         <GradientStop Color="#FFA3A7B9" Offset="0"/>
@@ -501,7 +502,10 @@
                     </RadialGradientBrush>
                 </Border.Background>
             </Border>
-            <DataGrid Name="dgridSelectTargetFilename" Width="Auto"  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgridSelectTargetFilename_MouseDoubleClick" >
+            <WrapPanel Orientation="Horizontal">
+                <TextBox Name="txtSearchTartgetFilename" Width="400" Margin="5,5,5,5" FontSize="24" TextChanged="txtSearchTartgetFilename_TextChanged" />
+            </WrapPanel>
+            <DataGrid Name="dgridSelectTargetFilename" Width="Auto" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgridSelectTargetFilename_MouseDoubleClick" >
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Header="ファイル名">
                         <DataGridTemplateColumn.CellTemplate>
@@ -512,7 +516,7 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-            <Button Content="キャンセル" Name="btnSelectCancel" FontSize="24" Height="40" Width="200" Margin="5,5,5,5" HorizontalAlignment="Center" Grid.Row="1" Click="btnSelectCancel_Click" />
+            <Button Content="キャンセル" Name="btnSelectCancel" FontSize="24" Height="40" Width="200" Margin="5,5,5,5" HorizontalAlignment="Center" Grid.Row="2" Click="btnSelectCancel_Click" />
         </Grid>
         <Grid Name="lgridKoreanPornoArrange" Visibility="Collapsed" >
             <Grid.RowDefinitions>
