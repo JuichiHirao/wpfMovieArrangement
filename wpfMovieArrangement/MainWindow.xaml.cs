@@ -1161,6 +1161,10 @@ namespace wpfMovieArrangement
                 }
                 else
                 {
+                    dispinfoSelectMovieImportData.SetMaker(listMatchMaker[0]);
+                    dispinfoSelectMovieImportData.SetPickupTitle();
+                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
+
                     dgridMakers.ItemsSource = null;
                     dgridMakers.ItemsSource = listMatchMaker;
 

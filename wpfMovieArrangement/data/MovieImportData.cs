@@ -89,6 +89,12 @@ namespace wpfMovieArrangement
                 Kind = Maker.Kind;
                 StrMaker = Maker.GetNameLabel();
             }
+
+            if (ProductNumber == null || ProductNumber.Length <= 0)
+            {
+                Regex regex = new Regex(Maker.MatchProductNumber);
+                ProductNumber = regex.Match(CopyText).Groups[0].Value;
+            }
         }
 
         /// <summary>
