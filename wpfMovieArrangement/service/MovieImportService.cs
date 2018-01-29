@@ -21,8 +21,8 @@ namespace wpfMovieArrangement.service
             else
                 dbcon = new DbConnection();
 
-            sqlcmd = "INSERT INTO MOVIE_IMPORT ( COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, SPLIT_FLAG, TAG, FILENAME, HD_KIND, MOVIE_FILES_ID ) ";
-            sqlcmd = sqlcmd + "VALUES( @CopyText, @Kind, @MatchProduct, @ProductNumber, @ProductDate, @Maker, @Title, @Actresses, @RarFlag, @SplitFlag, @Tag, @Filename, @HdKind, @MovieFilesId ) ";
+            sqlcmd = "INSERT INTO MOVIE_IMPORT ( COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, SPLIT_FLAG, NAME_ONLY_FLAG, TAG, FILENAME, HD_KIND, MOVIE_FILES_ID ) ";
+            sqlcmd = sqlcmd + "VALUES( @CopyText, @Kind, @MatchProduct, @ProductNumber, @ProductDate, @Maker, @Title, @Actresses, @RarFlag, @SplitFlag, @NameOnlyFlag, @Tag, @Filename, @HdKind, @MovieFilesId ) ";
 
             SqlCommand scmd = new SqlCommand(sqlcmd, dbcon.getSqlConnection());
             DataTable dtSaraly = new DataTable();
@@ -67,6 +67,10 @@ namespace wpfMovieArrangement.service
 
             sqlparam = new SqlParameter("@SplitFlag", SqlDbType.Int);
             sqlparam.Value = myData.SplitFlag;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@NameOnlyFlag", SqlDbType.Int);
+            sqlparam.Value = myData.NameOnlyFlag;
             listSqlParams.Add(sqlparam);
 
             sqlparam = new SqlParameter("@Tag", SqlDbType.VarChar);
@@ -120,6 +124,7 @@ namespace wpfMovieArrangement.service
             sqlcmd += ", ACTRESSES = @Actresses ";
             sqlcmd += ", RAR_FLAG = @RarFlag ";
             sqlcmd += ", SPLIT_FLAG = @SplitFlag ";
+            sqlcmd += ", NAME_ONLY_FLAG = @NameOnlyFlag ";
             sqlcmd += ", TAG = @Tag ";
             sqlcmd += ", FILENAME = @Filename ";
             sqlcmd += ", HD_KIND = @HdKind ";
@@ -169,6 +174,10 @@ namespace wpfMovieArrangement.service
 
             sqlparam = new SqlParameter("@SplitFlag", SqlDbType.Int);
             sqlparam.Value = myData.SplitFlag;
+            listSqlParams.Add(sqlparam);
+
+            sqlparam = new SqlParameter("@NameOnlyFlag", SqlDbType.Int);
+            sqlparam.Value = myData.NameOnlyFlag;
             listSqlParams.Add(sqlparam);
 
             sqlparam = new SqlParameter("@Tag", SqlDbType.VarChar);
@@ -241,7 +250,7 @@ namespace wpfMovieArrangement.service
             else
                 dbcon = new DbConnection();
 
-            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, SPLIT_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE ";
+            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, SPLIT_FLAG, NAME_ONLY_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE ";
             sqlcmd = sqlcmd + "FROM MOVIE_IMPORT ";
             sqlcmd = sqlcmd + "ORDER BY CREATE_DATE DESC";
 
@@ -269,10 +278,11 @@ namespace wpfMovieArrangement.service
                     newestData.Actresses = DbExportCommon.GetDbString(reader, 8);
                     newestData.RarFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 9));
                     newestData.SplitFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 10));
-                    newestData.Tag = DbExportCommon.GetDbString(reader, 11);
-                    newestData.Filename = DbExportCommon.GetDbString(reader, 12);
-                    newestData.CreateDate = DbExportCommon.GetDbDateTime(reader, 13);
-                    newestData.UpdateDate = DbExportCommon.GetDbDateTime(reader, 14);
+                    newestData.NameOnlyFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 11));
+                    newestData.Tag = DbExportCommon.GetDbString(reader, 12);
+                    newestData.Filename = DbExportCommon.GetDbString(reader, 13);
+                    newestData.CreateDate = DbExportCommon.GetDbDateTime(reader, 14);
+                    newestData.UpdateDate = DbExportCommon.GetDbDateTime(reader, 15);
                 }
             }
             finally
@@ -300,7 +310,7 @@ namespace wpfMovieArrangement.service
             else
                 dbcon = new DbConnection();
 
-            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, SPLIT_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE, HD_KIND, MOVIE_FILES_ID ";
+            sqlcmd = "SELECT ID, COPY_TEXT, KIND, MATCH_PRODUCT, PRODUCT_NUMBER, PRODUCT_DATE, MAKER, TITLE, ACTRESSES, RAR_FLAG, SPLIT_FLAG, NAME_ONLY_FLAG, TAG, FILENAME, CREATE_DATE, UPDATE_DATE, HD_KIND, MOVIE_FILES_ID ";
             sqlcmd = sqlcmd + "FROM MOVIE_IMPORT ";
             sqlcmd = sqlcmd + "ORDER BY CREATE_DATE ";
 
@@ -332,12 +342,13 @@ namespace wpfMovieArrangement.service
                         data.Actresses = DbExportCommon.GetDbString(reader, 8);
                         data.RarFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 9));
                         data.SplitFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 10));
-                        data.Tag = DbExportCommon.GetDbString(reader, 11);
-                        data.Filename = DbExportCommon.GetDbString(reader, 12);
-                        data.CreateDate = DbExportCommon.GetDbDateTime(reader, 13);
-                        data.UpdateDate = DbExportCommon.GetDbDateTime(reader, 14);
-                        data.SetHdKind(DbExportCommon.GetDbInt(reader, 15));
-                        data.FileId = DbExportCommon.GetDbInt(reader, 16);
+                        data.NameOnlyFlag = Convert.ToBoolean(DbExportCommon.GetDbInt(reader, 11));
+                        data.Tag = DbExportCommon.GetDbString(reader, 12);
+                        data.Filename = DbExportCommon.GetDbString(reader, 13);
+                        data.CreateDate = DbExportCommon.GetDbDateTime(reader, 14);
+                        data.UpdateDate = DbExportCommon.GetDbDateTime(reader, 15);
+                        data.SetHdKind(DbExportCommon.GetDbInt(reader, 16));
+                        data.FileId = DbExportCommon.GetDbInt(reader, 17);
 
                         listData.Add(data);
                     }

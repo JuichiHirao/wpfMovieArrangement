@@ -214,6 +214,24 @@ namespace wpfMovieArrangement
             }
         }
 
+        private bool _NameOnlyFlag;
+        public bool? NameOnlyFlag
+        {
+            get
+            {
+                return _NameOnlyFlag;
+            }
+            set
+            {
+                if (value == null)
+                    _NameOnlyFlag = false;
+                else
+                {
+                    _NameOnlyFlag = (bool)value;
+                }
+            }
+        }
+
         public string Tag { get; set; }
 
         public string Filename { get; set; }

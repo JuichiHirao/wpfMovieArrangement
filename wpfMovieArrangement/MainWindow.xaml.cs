@@ -1346,6 +1346,7 @@ namespace wpfMovieArrangement
             movieImportData.HdFlag = tbtnFileGenHdUpdate.IsChecked;
             movieImportData.RarFlag = tbtnFileGeneTextAddRar.IsChecked;
             movieImportData.SplitFlag = tbtnFileGenSplit.IsChecked;
+            movieImportData.NameOnlyFlag = tbtnFileGenModeFilenameOnly.IsChecked;
             movieImportData.Tag = txtTag.Text;
             movieImportData.GenerateFilename();
             movieImportData.Filename = txtFilenameGenerate.Text;
@@ -1375,6 +1376,8 @@ namespace wpfMovieArrangement
             txtTag.Text = myData.Tag;
             tbtnFileGeneTextAddRar.IsChecked = myData.RarFlag;
             tbtnFileGenSplit.IsChecked = myData.SplitFlag;
+            tbtnFileGenModeFilenameOnly.IsChecked = myData.NameOnlyFlag;
+            tbtnFileGenModeFilenameOnly_Click(null, null);
             txtFilenameGenerate.Text = myData.Filename;
 
             if (myData.FileId > 0)
@@ -1420,23 +1423,9 @@ namespace wpfMovieArrangement
 
         private void btnGenerateFilenameCopy_Click(object sender, RoutedEventArgs e)
         {
-            bool b = false;
-            if (tbtnFileGenModeFilenameOnly.IsChecked != null)
-                b = (bool)tbtnFileGenModeFilenameOnly.IsChecked;
-
             MovieImportService service = new service.MovieImportService();
-            if (GetChecked(tbtnFileGenModeFilenameOnly))
-            {
-                MovieImportData movieImportData = GetImportDataFromUIElement();
 
-                movieImportData = service.DbExport(movieImportData, new DbConnection());
-
-                ClearUIElement();
-
-                return;
-            }
-
-            if (Validation.GetHasError(txtFilenameGenDate))
+            if (!GetChecked(tbtnFileGenModeFilenameOnly) && Validation.GetHasError(txtFilenameGenDate))
             {
                 txtStatusBar.Text = "日付が正しく入力されていないため登録できません";
                 return;
@@ -1450,6 +1439,8 @@ namespace wpfMovieArrangement
                 movieImportData.Id = Convert.ToInt32(importId);
 
                 service.DbUpdate(movieImportData, new DbConnection());
+
+                ClearUIElement();
             }
             else
             {
@@ -1459,8 +1450,13 @@ namespace wpfMovieArrangement
 
                 ClearUIElement();
             }
+            var selItem = dgridSelectTargetFilename.SelectedItem;
+
+            int selIndex = dgridSelectTargetFilename.SelectedIndex;
 
             ColViewMovieImport.Refresh();
+
+            dgridSelectTargetFilename.SelectedItem = selItem;
         }
 
         private void btnPasteActresses_Click(object sender, RoutedEventArgs e)
@@ -1687,7 +1683,7 @@ namespace wpfMovieArrangement
 
         private void tbtnFileGenModeFilenameOnly_Click(object sender, RoutedEventArgs e)
         {
-            if (GetChecked((ToggleButton)sender))
+            if (GetChecked(tbtnFileGenModeFilenameOnly))
                 this.Background = new SolidColorBrush(Colors.LightGreen);
             else
                 this.Background = new SolidColorBrush(Colors.White);
