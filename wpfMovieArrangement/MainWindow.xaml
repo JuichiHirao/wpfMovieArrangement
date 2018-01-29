@@ -493,6 +493,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="50" />
                 <RowDefinition />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="50" />
             </Grid.RowDefinitions>
             <Border Margin="2,2,2,2" Grid.RowSpan="3">
@@ -507,18 +508,61 @@
             <WrapPanel Orientation="Horizontal">
                 <TextBox Name="txtSearchTartgetFilename" Width="400" Margin="5,5,5,5" FontSize="24" TextChanged="txtSearchTartgetFilename_TextChanged" />
             </WrapPanel>
-            <DataGrid Name="dgridSelectTargetFilename" Width="Auto" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgridSelectTargetFilename_MouseDoubleClick" >
+            <DataGrid Name="dgridSelectTargetFilename" Width="Auto" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgridSelectTargetFilename_MouseDoubleClick" SelectionChanged="dgridSelectTargetFilename_SelectionChanged" >
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="ファイル名">
+                    <DataGridTemplateColumn Header="" Width="40">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Name="Name" Text="{Binding Path=Filename}" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12" />
+                                <TextBlock Text="{Binding Path=DisplayNameOnlyFlag}" Margin="5,0,5,0" VerticalAlignment="Center" FontSize="18" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="RAR" Width="40">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=DisplayRarFlag}" Margin="5,0,5,0" VerticalAlignment="Center" FontSize="18" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="分割" Width="40">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=DisplaySplitFlag}" Margin="5,0,5,0" VerticalAlignment="Center" FontSize="18" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="" Width="50">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=DisplayHdKind}" Margin="5,0,5,0" VerticalAlignment="Center" FontSize="12" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="品番" Width="150">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=ProductNumber}" Margin="5,0,5,0" VerticalAlignment="Center" FontSize="18" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="日付" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=ProductDate, StringFormat='yyyy/MM/dd'}" Margin="5,0,5,0" VerticalAlignment="Center" FontSize="14" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="ファイル名" Width="345">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Name="Name" Text="{Binding Path=Filename}" Margin="5,0,5,0" VerticalAlignment="Center" FontSize="12" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-            <Button Content="キャンセル" Name="btnSelectCancel" FontSize="24" Height="40" Width="200" Margin="5,5,5,5" HorizontalAlignment="Center" Grid.Row="2" Click="btnSelectCancel_Click" />
+            <TextBox Name="txtFileGenSelectFilename" TextWrapping="Wrap" Grid.Row="2" />
+            <Button Content="キャンセル" Name="btnSelectCancel" FontSize="24" Height="40" Width="200" Margin="5,5,5,5" HorizontalAlignment="Center" Grid.Row="3" Click="btnSelectCancel_Click" />
         </Grid>
         <Grid Name="lgridKoreanPornoArrange" Visibility="Collapsed" >
             <Grid.RowDefinitions>

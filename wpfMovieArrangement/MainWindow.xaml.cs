@@ -191,7 +191,7 @@ namespace wpfMovieArrangement
             txtKoreanPornoExportPath.Text = setting.KoreanPornoExportPath;
             txtFilenameGenDate.Text = "";
 
-            ChangeModeNormalMovieExecute(null, null);
+            CahngeModeFilenameGenerateExecute(null, null);
 
             OnGridTargetDisplay(null, null);
 
@@ -865,6 +865,7 @@ namespace wpfMovieArrangement
 
         private void Window_SizeChanged_1(object sender, SizeChangedEventArgs e)
         {
+            dgridSelectTargetFilename.Width = this.ActualWidth - 10;
             txtStatusBar.Width = stsbaritemDispDetail.ActualWidth;
         }
 
@@ -1695,6 +1696,16 @@ namespace wpfMovieArrangement
                 b = (bool)myToggleButton.IsChecked;
 
             return b;
+        }
+
+        private void dgridSelectTargetFilename_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            MovieImportData data = dgridSelectTargetFilename.SelectedItem as MovieImportData;
+
+            if (data == null)
+                return;
+
+            txtFileGenSelectFilename.Text = data.Filename;
         }
     }
 }

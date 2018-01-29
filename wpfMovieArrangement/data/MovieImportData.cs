@@ -73,7 +73,7 @@ namespace wpfMovieArrangement
 
             }
         }
-        public DateTime ProductDate{ get; set; }
+        public DateTime ProductDate { get; set; }
 
         public string StrMaker { get; set; }
 
@@ -106,7 +106,7 @@ namespace wpfMovieArrangement
             {
                 Regex regex = new Regex(Maker.MatchProductNumber);
 
-                foreach(Match m in regex.Matches(CopyText))
+                foreach (Match m in regex.Matches(CopyText))
                 {
                     ProductNumber = m.Value;
                     break;
@@ -178,6 +178,8 @@ namespace wpfMovieArrangement
             return;
         }
 
+        public string DisplaySplitFlag { get; set; }
+
         private bool _SplitFlag;
         public bool? SplitFlag
         {
@@ -188,13 +190,21 @@ namespace wpfMovieArrangement
             set
             {
                 if (value == null)
+                {
                     _SplitFlag = false;
+                    DisplaySplitFlag = "";
+                }
                 else
                 {
                     _SplitFlag = (bool)value;
+
+                    if (_SplitFlag)
+                        DisplaySplitFlag = "○";
                 }
             }
         }
+
+        public string DisplayRarFlag { get; set; }
 
         private bool _RarFlag;
         public bool? RarFlag
@@ -206,13 +216,20 @@ namespace wpfMovieArrangement
             set
             {
                 if (value == null)
+                {
                     _RarFlag = false;
+                    DisplayRarFlag = "";
+                }
                 else
                 {
                     _RarFlag = (bool)value;
+                    if (_RarFlag)
+                        DisplayRarFlag = "○";
                 }
             }
         }
+
+        public string DisplayNameOnlyFlag { get; set; }
 
         private bool _NameOnlyFlag;
         public bool? NameOnlyFlag
@@ -224,17 +241,45 @@ namespace wpfMovieArrangement
             set
             {
                 if (value == null)
+                {
                     _NameOnlyFlag = false;
+                    DisplayNameOnlyFlag = "";
+                }
                 else
                 {
                     _NameOnlyFlag = (bool)value;
+                    if (_NameOnlyFlag)
+                        DisplayNameOnlyFlag = "○";
                 }
             }
         }
 
         public string Tag { get; set; }
 
-        public string Filename { get; set; }
+        public string DisplayHdKind { get; set;}
+
+        private string _Filename;
+        public string Filename
+        {
+            get
+            {
+                return _Filename;
+            }
+            set
+            {
+                _Filename = value;
+                foreach (HdInfo data in HdKindList)
+                {
+                    Regex regex = new Regex(data.Name);
+                    if (regex.IsMatch(Filename.Trim()))
+                    {
+                        DisplayHdKind = data.Name;
+                        break;
+                    }
+                }
+
+            }
+        }
 
         public DateTime CreateDate { get; set; }
 
