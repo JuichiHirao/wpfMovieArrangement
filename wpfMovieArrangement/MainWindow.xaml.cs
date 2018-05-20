@@ -1023,8 +1023,113 @@ namespace wpfMovieArrangement
             settingControl.Save(txtBasePath.Text, txtLabelPath.Text, txtKoreanPornoPath.Text, txtKoreanPornoExportPath.Text);
         }
 
+        /// <summary>
+        /// ImportDataを取得
+        /// btnPasteTitleText_Click, btnPasteTextRefresh_Click で使用
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private MovieImportData GetImportData(string myPasteText)
+        {
+            MovieImportData importData = null;
+            if (myPasteText.IndexOf("[AV") == 0
+                || myPasteText.IndexOf("[IV") == 0
+                || myPasteText.IndexOf("[裏") == 0)
+            {
+                importData = new MovieImportData(myPasteText);
+
+                txtbFileGenFileId.Text = Convert.ToString(importData.FileId);
+                txtKind.Text = Convert.ToString(importData.Kind);
+                txtFilenameGenDate.Text = importData.ProductDate.ToString("yyyy/MM/dd");
+                txtProductNumber.Text = importData.ProductNumber;
+                txtMaker.Text = importData.StrMaker;
+                txtTitle.Text = importData.Title;
+                tbtnFileGenHdUpdate.IsChecked = importData.HdFlag;
+
+                if (importData.RarFlag == true)
+                    tbtnFileGeneTextAddRar.IsChecked = true;
+
+                dispinfoSelectMovieImportData = importData;
+                ColViewFileGeneTargetFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFilterProductNumber();
+                ColViewFileGeneTargetFiles.Refresh();
+            }
+            else
+            {
+                importData = new MovieImportData();
+                // メーカー情報と合わせるための製品番号、HDかどうかの情報をParse
+                importData.ParseFromPasteText(myPasteText);
+            }
+
+            return importData;
+        }
+
+        /// <summary>
+        /// 入力されている貼り付けテキストでメーカー情報再取得、反映
+        /// btnPasteTitleText_Click, btnPasteTextRefresh_Click で使用
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void RefrectionMatchMaker(List<MovieMaker> myMatchMakerList)
+        {
+            try
+            {
+                if (myMatchMakerList == null || myMatchMakerList.Count() <= 0)
+                {
+                    txtStatusBar.Text = "一致するメーカーが存在しませんでした";
+                    dispinfoSelectMovieImportData.SetPickupTitle();
+                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
+                }
+                else if (myMatchMakerList.Count() == 1)
+                {
+                    dispinfoSelectMovieImportData.SetMaker(myMatchMakerList[0]);
+                    dispinfoSelectMovieImportData.SetPickupTitle();
+                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
+                }
+                else
+                {
+                    dispinfoSelectMovieImportData.SetMaker(myMatchMakerList[0]);
+                    dispinfoSelectMovieImportData.SetPickupTitle();
+                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
+
+                    dgridMakers.ItemsSource = null;
+                    dgridMakers.ItemsSource = myMatchMakerList;
+
+                    lgridMakers.Visibility = System.Windows.Visibility.Visible;
+
+                    // Autoの設定にする
+                    ScreenDisableBorder.Width = Double.NaN;
+                    ScreenDisableBorder.Height = Double.NaN;
+
+                    isSelectSameMaker = true;
+
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+                MessageBox.Show(ex.Message);
+                return;
+            }
+
+            ColViewFileGeneTargetFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFilterProductNumber();
+            txtFileGeneSearchText.Text = ColViewFileGeneTargetFiles.FilterSearchProductNumber;
+
+            ColViewFileGeneTargetFiles.Refresh();
+        }
+
+        private void btnPasteTextRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            MovieImportData importData = GetImportData(txtTitleText.Text);
+
+            // 一致したメーカーで、再反映
+            RefrectionMatchMaker(ColViewMaker.GetMatchData(importData));
+        }
+
         private void btnPasteTitleText_Click(object sender, RoutedEventArgs e)
         {
+            txtStatusBar.Text = "";
+
             string titletext = ClipBoardCommon.GetText();
 
             if (titletext.Trim().Length <= 10)
@@ -1046,39 +1151,8 @@ namespace wpfMovieArrangement
 
             dispinfoSelectMovieImportData = null;
             ClearUIElement();
-            txtTitleText.Text = titletext;
 
-            MovieImportData importData;
-            if (titletext.IndexOf("RAR") == 0
-                || titletext.IndexOf("[AV") == 0
-                || titletext.IndexOf("[IV") == 0
-                || titletext.IndexOf("[裏") == 0)
-            {
-                importData = new MovieImportData(titletext);
-
-                txtbFileGenFileId.Text = Convert.ToString(importData.FileId);
-                txtKind.Text = Convert.ToString(importData.Kind);
-                txtFilenameGenDate.Text = importData.ProductDate.ToString("yyyy/MM/dd");
-                txtProductNumber.Text = importData.ProductNumber;
-                txtMaker.Text = importData.StrMaker;
-                txtTitle.Text = importData.Title;
-                tbtnFileGenHdUpdate.IsChecked = importData.HdFlag;
-
-                if (importData.RarFlag == true)
-                    tbtnFileGeneTextAddRar.IsChecked = true;
-
-                dispinfoSelectMovieImportData = importData;
-                ColViewFileGeneTargetFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFilterProductNumber();
-                ColViewFileGeneTargetFiles.Refresh();
-
-                //return;
-            }
-
-            txtStatusBar.Text = "";
-
-            importData = new MovieImportData();
-            // メーカー情報と合わせるための製品番号、HDかどうかの情報をParse
-            importData.ParseFromPasteText(titletext);
+            MovieImportData importData = GetImportData(titletext);
 
             List<MovieMaker> listMatchMaker = ColViewMaker.GetMatchData(importData);
 
@@ -1091,7 +1165,7 @@ namespace wpfMovieArrangement
                 }
             }
 
-            if (importData.ProductNumber != null && importData.ProductNumber.Length > 0)
+            if (String.IsNullOrEmpty(importData.ProductNumber))
             {
                 // MOVIE_IMPORT_DATAに既存にデータがが存在すれば表示
                 dispinfoSelectMovieImportData = ColViewMovieImport.GetDataByProductId(importData.ProductNumber);
@@ -1117,7 +1191,7 @@ namespace wpfMovieArrangement
                 {
                     string msg = "対象のMOVIE_FILE_CONTENTSが複数件存在します";
 
-                    foreach(MovieFileContents data in matchList)
+                    foreach (MovieFileContents data in matchList)
                     {
                         msg += "\n" + data.Name;
                     }
@@ -1145,53 +1219,7 @@ namespace wpfMovieArrangement
             if (dispinfoSelectMovieImportData == null)
                 dispinfoSelectMovieImportData = importData;
 
-            try
-            {
-                //listMatchMaker = MovieMakers.GetMatchData(dispinfoSelectMovieImportData, listMakers);
-
-                if (listMatchMaker == null || listMatchMaker.Count() <= 0)
-                {
-                    txtStatusBar.Text = "一致するメーカーが存在しませんでした";
-                    dispinfoSelectMovieImportData.SetPickupTitle();
-                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
-                }
-                else if (listMatchMaker.Count() == 1)
-                {
-                    dispinfoSelectMovieImportData.SetMaker(listMatchMaker[0]);
-                    dispinfoSelectMovieImportData.SetPickupTitle();
-                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
-                }
-                else
-                {
-                    dispinfoSelectMovieImportData.SetMaker(listMatchMaker[0]);
-                    dispinfoSelectMovieImportData.SetPickupTitle();
-                    SetUIElementFromImportData(dispinfoSelectMovieImportData);
-
-                    dgridMakers.ItemsSource = null;
-                    dgridMakers.ItemsSource = listMatchMaker;
-
-                    lgridMakers.Visibility = System.Windows.Visibility.Visible;
-
-                    // Autoの設定にする
-                    ScreenDisableBorder.Width = Double.NaN;
-                    ScreenDisableBorder.Height = Double.NaN;
-
-                    isSelectSameMaker = true;
-
-                    return;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-                MessageBox.Show(ex.Message);
-                return;
-            }
-
-            ColViewFileGeneTargetFiles.FilterSearchProductNumber = dispinfoSelectMovieImportData.GetFilterProductNumber();
-            txtFileGeneSearchText.Text = ColViewFileGeneTargetFiles.FilterSearchProductNumber;
-
-            ColViewFileGeneTargetFiles.Refresh();
+            RefrectionMatchMaker(listMatchMaker);
         }
 
         private void dgridMakers_MouseDoubleClick(object sender, MouseButtonEventArgs e)

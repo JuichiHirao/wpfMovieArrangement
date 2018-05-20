@@ -188,7 +188,7 @@ namespace wpfMovieArrangement.collection
             Regex regexEdited = new Regex("^\\[AV|^\\[裏AV|^\\[IV");
             //IEnumerable<string> files = from file in Directory.GetFiles(@"\\SANDY2500\BitTorrent\JDownloader", "*", SearchOption.AllDirectories) where regex.IsMatch(file) select file;
 
-            string[] files = Directory.GetFiles(@myPath, "*", System.IO.SearchOption.AllDirectories);
+            string[] files = Directory.GetFiles(@myPath, "*", System.IO.SearchOption.TopDirectoryOnly);
 
             if (listTargetFiles == null)
                 listTargetFiles = new List<TargetFiles>();

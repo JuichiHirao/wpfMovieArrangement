@@ -257,17 +257,19 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="120" />
                     <ColumnDefinition />
+                    <ColumnDefinition Width="80" />
                 </Grid.ColumnDefinitions>
                 <Button Name="btnPasteTitleText" Content="貼付" Margin="5,3,5,3" Click="btnPasteTitleText_Click" />
                 <TextBox Name="txtTitleText" Margin="5,3,5,3" FontSize="18" Grid.Column="1" TextWrapping="Wrap" />
-                <WrapPanel Orientation="Horizontal" Grid.ColumnSpan="2" Grid.Row="1" Height="40">
+                <Button Name="btnPasteTextRefresh" Content="更新" Margin="5,3,5,3" Grid.Column="2" Click="btnPasteTextRefresh_Click" />
+                <WrapPanel Orientation="Horizontal" Grid.ColumnSpan="3" Grid.Row="1" Height="40">
                     <TextBlock Text="ImpId" Margin="5,5,5,5" FontSize="16" />
                     <TextBlock Name="txtbFileGenImportId" Margin="5,5,5,5" FontSize="24" />
                     <TextBlock Text="FileId" Margin="5,5,5,5" FontSize="16" />
                     <TextBlock Name="txtbFileGenFileId" Margin="5,5,5,5" FontSize="24" />
                     <Button Name="btnFileGenClearFileId" Content="Clear" Click="btnFileGenClearFileId_Click" />
                 </WrapPanel>
-                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Grid.Row="2">
+                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.ColumnSpan="3" Grid.Row="2">
                     <ToggleButton Name="tbtnFileGeneTextAddRar" Content="RAR" Height="40" Width="100" Margin="5,5,5,5" />
                     <ToggleButton Name="tbtnFileGenHdUpdate" Content="HDデータ更新" Height="40" Width="100" Margin="35,5,5,5" Click="tbtnFileGenHdUpdate_Click" />
                     <ToggleButton Name="tbtnFileGenSplit" Content="FILE分割" Height="40" Width="100" Margin="35,5,5,5" Click="tbtnFileGenHdUpdate_Click" />
