@@ -192,6 +192,7 @@ namespace wpfMovieArrangement
             txtFilenameGenDate.Text = "";
 
             CahngeModeFilenameGenerateExecute(null, null);
+            //ChangeModeNormalMovieExecute(null, null);
 
             OnGridTargetDisplay(null, null);
 
@@ -205,7 +206,7 @@ namespace wpfMovieArrangement
 
             ColViewMaker = new collection.MakerCollection();
 
-            dgridCheckExistFiles.ItemsSource = ColViewFileGeneTargetFiles.ColViewListTargetFiles;
+            //dgridCheckExistFiles.ItemsSource = ColViewFileGeneTargetFiles.ColViewListTargetFiles;
             dgridArrangementTarget.ItemsSource = ColViewArrangementTarget.ColViewListTargetFiles;
             dgridDestFile.ItemsSource = ColViewDestFiles.ColViewListTargetFiles;
             dgridKoreanPorno.ItemsSource = ColViewKoreanPorno.ColViewListData;
@@ -1706,6 +1707,11 @@ namespace wpfMovieArrangement
                 return;
 
             txtFileGenSelectFilename.Text = data.Filename;
+        }
+
+        private void btnFileGenLoad_Click(object sender, RoutedEventArgs e)
+        {
+            dgridCheckExistFiles.ItemsSource = ColViewFileGeneTargetFiles.ColViewListTargetFiles;
         }
     }
 }
